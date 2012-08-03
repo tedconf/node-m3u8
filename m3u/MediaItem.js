@@ -42,3 +42,7 @@ MediaItem.prototype.DEFAULT = function(value) {
 MediaItem.prototype.FORCED = function(value) {
   this.attributes.forced = value == 'YES' ? true : false;
 };
+
+MediaItem.prototype.toString = function toString() {
+  return '#EXT-X-MEDIA:' + this.attributesToString();
+};

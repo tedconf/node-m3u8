@@ -6,3 +6,7 @@ var IframeStreamItem = module.exports = function IframeStreamItem() {
 };
 
 util.inherits(IframeStreamItem, StreamItem);
+
+IframeStreamItem.prototype.toString = function toString() {
+  return '#EXT-X-I-FRAME-STREAM-INF:' + this.attributesToString();
+};

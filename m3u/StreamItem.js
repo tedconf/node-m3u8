@@ -4,7 +4,8 @@ var util = require('util'),
 var StreamItem = module.exports = function StreamItem() {
   Item.call(this);
   this.mergeAttributes({
-    bandwidth : null
+    bandwidth : null,
+    programId : null
   });
 };
 
@@ -33,4 +34,12 @@ StreamItem.prototype.AUDIO = function(value) {
 
 StreamItem.prototype.SUBTITLES = function(value) {
   this.attributes.subtitles = value;
+};
+
+StreamItem.prototype.toString = function toString() {
+  var output = [];
+  output.push('#EXT-X-STREAM-INF:' + this.attributesToString());
+  output.push(this.attributes.uri);
+
+  return output.join('\n');
 };
