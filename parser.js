@@ -45,7 +45,7 @@ m3uParser.prototype.write = function(data) {
 
 m3uParser.prototype.end = function() {
   this.parse(this.bufferedLine);
-  console.log(this.m3u.items);
+  console.log(this.m3u.items.MediaItem);
 };
 
 m3uParser.prototype.parse = function parse(data) {
@@ -96,47 +96,36 @@ m3uParser.prototype['EXTINF'] = function parseInf(data) {
   this.currentItem.title(data[1]);
 };
 
-m3uParser.prototype['EXT-X-STREAM-INF'] = function parseStreamInf(data) {
-  this.addItem(new StreamItem);
+m3uParser.prototype['EXT-X-I-FRAMES-ONLY'] = function iframesOnly() {
+  this.m3u.iframesOnly = true;
+};
 
+m3uParser.prototype.parseAttributes = function parseAttributes(data) {
   data = data.split(NON_QUOTED_COMMA);
   var self = this;
   data.forEach(function(attribute) {
     var keyValue = attribute.split('=');
     if (typeof self.currentItem[keyValue[0]] == 'function') {
       self.currentItem[keyValue[0]](keyValue[1]);
+    } else {
+      console.log('Unhandled key-value:', attribute);
     }
   });
+}
+
+m3uParser.prototype['EXT-X-STREAM-INF'] = function(data) {
+  this.addItem(new StreamItem);
+  this.parseAttributes(data);
 };
 
-m3uParser.prototype['EXT-X-I-FRAMES-ONLY'] = function iframesOnly() {
-  this.m3u.iframesOnly = true;
-};
-
-m3uParser.prototype['EXT-X-I-FRAME-STREAM-INF'] = function parseIFrameStreamInf(data) {
+m3uParser.prototype['EXT-X-I-FRAME-STREAM-INF'] = function(data) {
   this.addItem(new IframeStreamItem);
-
-  data = data.split(NON_QUOTED_COMMA);
-  var self = this;
-  data.forEach(function(keyValue) {
-    keyValue = keyValue.split('=');
-    if (typeof self.currentItem[keyValue[0]] == 'function') {
-      self.currentItem[keyValue[0]](keyValue[1]);
-    }
-  });
+  this.parseAttributes(data);
 };
 
-m3uParser.prototype['EXT-X-MEDIA'] = function parseMedia(data) {
+m3uParser.prototype['EXT-X-MEDIA'] = function(data) {
   this.addItem(new MediaItem);
-
-  data = data.split(NON_QUOTED_COMMA);
-  var self = this;
-  data.forEach(function(keyValue) {
-    keyValue = keyValue.split('=');
-    if (typeof self.currentItem[keyValue[0]] == 'function') {
-      self.currentItem[keyValue[0]](keyValue[1]);
-    }
-  });
+  this.parseAttributes(data);
 };
 
 m3uParser.prototype['EXT-X-BYTERANGE'] = function parseByteRange(data) {
