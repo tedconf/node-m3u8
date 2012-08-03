@@ -1,4 +1,9 @@
-var Stream = require('stream');
+var Stream = require('stream'),
+    M3U = require('./m3u'),
+    PlaylistItem = require('./m3u/PlaylistItem'),
+    StreamItem = require('./m3u/StreamItem'),
+    IframeStreamItem = require('./m3u/IframeStreamItem')
+    MediaItem = require('./m3u/MediaItem');
 
 var intValues    = ['EXT-X-TARGETDURATION', 'EXT-X-VERSION', 'EXT-X-MEDIA-SEQUENCE'];
 var stringValues = ['EXT-X-PLAYLIST-TYPE'];
@@ -10,6 +15,9 @@ var keyMap = {
   'EXT-X-PLAYLIST-TYPE'  : 'playlistType'
 };
 
+// used for splitting strings by commas not within double quotes
+var NON_QUOTED_COMMA = /,(?=(?:[^"]|"[^"]*")*$)/;
+
 var m3uParser = module.exports = function m3uParser() {
   Stream.apply(this);
   this.writable = true;
@@ -17,9 +25,7 @@ var m3uParser = module.exports = function m3uParser() {
 
   this.bufferedLine = null;
   this.lines = [];
-  this.m3u = {
-    items: []
-  };
+  this.m3u = new M3U;
 };
 
 m3uParser.prototype = Object.create(
@@ -39,7 +45,7 @@ m3uParser.prototype.write = function(data) {
 
 m3uParser.prototype.end = function() {
   this.parse(this.bufferedLine);
-  console.log(this.m3u);
+  console.log(this.m3u.items);
 };
 
 m3uParser.prototype.parse = function parse(data) {
@@ -54,15 +60,14 @@ m3uParser.prototype.parse = function parse(data) {
   while (this.lines.length) {
     var line = this.lines.shift();
     this.emit('line', line);
-    if (line == '#EXT-X-ENDLIST') return true;
+    if (['', '#EXT-X-ENDLIST'].indexOf(line) > -1) return true;
     if (line.indexOf('#') == 0) {
       this.parseLine(line);
     } else {
-      if (this.currentItem.file != undefined) {
-        this.m3u.items.push({});
-        this.currentItem = this.m3u.items[this.m3u.items.length - 1];
+      if (this.currentItem.attributes.uri != undefined) {
+        this.addItem(new PlaylistItem);
       }
-      this.currentItem.file = line;
+      this.currentItem.uri(line);
       this.emit('item', this.currentItem);
     }
   }
@@ -77,19 +82,67 @@ m3uParser.prototype.parseLine = function parseLine(line) {
   }
 };
 
+m3uParser.prototype.addItem = function addItem(item) {
+  this.m3u.items[item.constructor.name].push(item);
+  this.currentItem = item;
+  return item;
+};
+
 m3uParser.prototype['EXTINF'] = function parseInf(data) {
-  this.m3u.items.push({});
-  this.currentItem = this.m3u.items[this.m3u.items.length - 1];
+  this.addItem(new PlaylistItem);
 
   data = data.split(',');
-  this.currentItem.duration = parseFloat(data[0]);
-  this.currentItem.title    = data[1];
+  this.currentItem.duration(data[0]);
+  this.currentItem.title(data[1]);
+};
+
+m3uParser.prototype['EXT-X-STREAM-INF'] = function parseStreamInf(data) {
+  this.addItem(new StreamItem);
+
+  data = data.split(NON_QUOTED_COMMA);
+  var self = this;
+  data.forEach(function(attribute) {
+    var keyValue = attribute.split('=');
+    if (typeof self.currentItem[keyValue[0]] == 'function') {
+      self.currentItem[keyValue[0]](keyValue[1]);
+    }
+  });
+};
+
+m3uParser.prototype['EXT-X-I-FRAMES-ONLY'] = function iframesOnly() {
+  this.m3u.iframesOnly = true;
+};
+
+m3uParser.prototype['EXT-X-I-FRAME-STREAM-INF'] = function parseIFrameStreamInf(data) {
+  this.addItem(new IframeStreamItem);
+
+  data = data.split(NON_QUOTED_COMMA);
+  var self = this;
+  data.forEach(function(keyValue) {
+    keyValue = keyValue.split('=');
+    if (typeof self.currentItem[keyValue[0]] == 'function') {
+      self.currentItem[keyValue[0]](keyValue[1]);
+    }
+  });
+};
+
+m3uParser.prototype['EXT-X-MEDIA'] = function parseMedia(data) {
+  this.addItem(new MediaItem);
+
+  data = data.split(NON_QUOTED_COMMA);
+  var self = this;
+  data.forEach(function(keyValue) {
+    keyValue = keyValue.split('=');
+    if (typeof self.currentItem[keyValue[0]] == 'function') {
+      self.currentItem[keyValue[0]](keyValue[1]);
+    }
+  });
 };
 
 m3uParser.prototype['EXT-X-BYTERANGE'] = function parseByteRange(data) {
   data = data.split('@');
-  this.currentItem.byteLength = parseInt(data[0], 10);
-  this.currentItem.byteOffset = parseInt(data[1], 10);
+  this.currentItem.byteLength(data[0]);
+  this.currentItem.byteOffset(data[1]);
 };
 
 intValues.forEach(function(value) {
@@ -103,3 +156,11 @@ stringValues.forEach(function(value) {
     this.m3u[keyMap[value]] = data;
   };
 });
+
+var test = m3uParser.createStream();
+
+var fs = require('fs');
+//var file = fs.createReadStream('/Users/bog/Work/TED/iOS/Streaming/subtitles/public/ab/hls_600k_video.m3u8');
+var file = fs.createReadStream('/Users/bog/Downloads/hls-lang.m3u8');
+
+file.pipe(test);
