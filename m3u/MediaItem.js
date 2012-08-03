@@ -1,4 +1,8 @@
+var util = require('util'),
+    Item = require('./Item');
+
 var MediaItem = module.exports = function MediaItem() {
+  Item.call(this);
   this.attributes = {
     groupId    : null,
     name       : null,
@@ -9,9 +13,7 @@ var MediaItem = module.exports = function MediaItem() {
   };
 };
 
-MediaItem.prototype.uri = MediaItem.prototype.URI = function setUri(uri) {
-  this.attributes.uri = uri;
-};
+util.inherits(MediaItem, Item);
 
 MediaItem.prototype['GROUP-ID'] = function(value) {
   this.attributes.groupId = value;

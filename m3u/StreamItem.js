@@ -1,13 +1,15 @@
+var util = require('util'),
+    Item = require('./Item');
+
 var StreamItem = module.exports = function StreamItem() {
+  Item.call(this);
   this.attributes = {
     uri       : null,
     bandwidth : null
   };
 };
 
-StreamItem.prototype.uri = StreamItem.prototype.URI = function setUri(uri) {
-  this.attributes.uri = uri;
-};
+util.inherits(StreamItem, Item);
 
 StreamItem.prototype['PROGRAM-ID'] = function(value) {
   this.attributes.programId = parseInt(value, 10);

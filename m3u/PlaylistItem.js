@@ -1,4 +1,8 @@
+var util = require('util'),
+    Item = require('./Item');
+
 var PlaylistItem = module.exports = function PlaylistItem() {
+  Item.call(this);
   this.attributes = {
     duration : null,
     title    : null,
@@ -6,9 +10,7 @@ var PlaylistItem = module.exports = function PlaylistItem() {
   };
 };
 
-PlaylistItem.prototype.uri = function setUri(uri) {
-  this.attributes.uri = uri;
-};
+util.inherits(PlaylistItem, Item);
 
 PlaylistItem.prototype.byteLength = function byteLength(value) {
   this.attributes.byteLength = parseInt(value, 10);
