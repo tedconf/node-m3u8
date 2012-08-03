@@ -3,11 +3,10 @@ var util = require('util'),
 
 var PlaylistItem = module.exports = function PlaylistItem() {
   Item.call(this);
-  this.attributes = {
+  this.mergeAttributes({
     duration : null,
-    title    : null,
-    uri      : null
-  };
+    title    : null
+  });
 };
 
 util.inherits(PlaylistItem, Item);

@@ -3,14 +3,14 @@ var util = require('util'),
 
 var MediaItem = module.exports = function MediaItem() {
   Item.call(this);
-  this.attributes = {
+  this.mergeAttributes({
     groupId    : null,
     name       : null,
     autoselect : false,
     default    : false,
     forced     : false,
     type       : null
-  };
+  });
 };
 
 util.inherits(MediaItem, Item);

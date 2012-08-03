@@ -3,10 +3,9 @@ var util = require('util'),
 
 var StreamItem = module.exports = function StreamItem() {
   Item.call(this);
-  this.attributes = {
-    uri       : null,
+  this.mergeAttributes({
     bandwidth : null
-  };
+  });
 };
 
 util.inherits(StreamItem, Item);
