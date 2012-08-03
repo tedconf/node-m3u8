@@ -4,6 +4,7 @@ var MediaItem = module.exports = function MediaItem() {
     name       : null,
     autoselect : false,
     default    : false,
+    forced     : false,
     type       : null
   };
 };
@@ -24,10 +25,18 @@ MediaItem.prototype.TYPE = function(value) {
   this.attributes.type = value;
 };
 
+MediaItem.prototype.LANGUAGE = function(value) {
+  this.attributes.language = value;
+};
+
 MediaItem.prototype.AUTOSELECT = function(value) {
   this.attributes.autoselect = value == 'YES' ? true : false;
 };
 
 MediaItem.prototype.DEFAULT = function(value) {
   this.attributes.default = value == 'YES' ? true : false;
+};
+
+MediaItem.prototype.FORCED = function(value) {
+  this.attributes.forced = value == 'YES' ? true : false;
 };
