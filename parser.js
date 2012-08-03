@@ -74,11 +74,11 @@ m3uParser.prototype.parse = function parse(data) {
 };
 
 m3uParser.prototype.parseLine = function parseLine(line) {
-  var parts   = line.slice(1).split(':');
-  var command = parts[0];
-  var data    = parts[1];
-  if (typeof this[command] == 'function') {
-    this[command](data, command);
+  var parts = line.slice(1).split(':');
+  var tag   = parts[0];
+  var data  = parts[1];
+  if (typeof this[tag] == 'function') {
+    this[tag](data, tag);
   }
 };
 
