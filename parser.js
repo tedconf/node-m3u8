@@ -1,4 +1,5 @@
-var Stream = require('stream'),
+var util = require('util'),
+    Stream = require('stream'),
     M3U = require('./m3u'),
     PlaylistItem = require('./m3u/PlaylistItem'),
     StreamItem = require('./m3u/StreamItem'),
@@ -28,10 +29,7 @@ var m3uParser = module.exports = function m3uParser() {
   this.m3u = new M3U;
 };
 
-m3uParser.prototype = Object.create(
-  Stream.prototype,
-  { constructor: { value: m3uParser } }
-);
+util.inherits(m3uParser, Stream);
 
 m3uParser.createStream = function() {
   return new m3uParser;
