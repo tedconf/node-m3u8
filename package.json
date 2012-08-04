@@ -1,0 +1,36 @@
+{
+    "name" : "m3u8",
+    "version" : "0.0.1",
+    "description" : "streaming m3u8 parser for Apple's HTTP Live Streaming protocol",
+    "main" : "./m3u.js",
+    "keywords" : [
+        "stream",
+        "m3u",
+        "m3u8",
+        "hls",
+        "http live streaming"
+    ],
+    "repository" : {
+        "type" : "git",
+        "url" : "http://github.com/tedconf/node-m3u8.git"
+    },
+    "directories" : {
+        "lib" : ".",
+        "examples" : "./examples"
+    },
+    "dependencies" : {
+        "inflect" : "~0.2.2"
+    },
+    "devDependencies" : {
+        "mocha" : "~1.3.2"
+    },
+    "engine" : {
+        "node" : ">=0.6.0"
+    },
+    "author" : {
+        "name" : "Mark Bogdanoff",
+        "email" : "bog@ted.com",
+        "url" : "http://www.ted.com"
+    },
+    "private": true
+}
