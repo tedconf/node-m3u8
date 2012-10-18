@@ -9,6 +9,12 @@ var MediaItem = module.exports = function MediaItem(attributes) {
 
 util.inherits(MediaItem, Item);
 
+MediaItem.create = function createMediaItem(data) {
+  var item = new MediaItem();
+  item.setData(data);
+  return item;
+};
+
 MediaItem.prototype.toString = function toString() {
   return '#EXT-X-MEDIA:' + this.attributes.toString();
 };

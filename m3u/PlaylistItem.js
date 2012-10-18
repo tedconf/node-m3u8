@@ -7,15 +7,23 @@ var PlaylistItem = module.exports = function PlaylistItem() {
 
 util.inherits(PlaylistItem, Item);
 
+PlaylistItem.create = function createPlaylistItem(data) {
+  var item = new PlaylistItem();
+  item.setData(data);
+  return item;
+};
+
 PlaylistItem.prototype.toString = function toString() {
   var output = [];
   if (this.get('duration') != null || this.get('title') != null) {
-    output.push('#EXTINF:' + [this.get('duration'), this.get('title')].join(','));
+    output.push(
+      '#EXTINF:' + [this.get('duration'), this.get('title')].join(',')
+    );
   }
-  if (this.byteRange != null) {
+  if (this.get('byteRange') != null) {
     output.push('#EXT-X-BYTERANGE:' + this.get('byteRange'));
   }
-  output.push(this.get('URI'));
+  output.push(this.get('uri'));
 
   return output.join('\n');
 };

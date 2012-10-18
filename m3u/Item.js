@@ -28,6 +28,13 @@ Item.prototype.set = function set(key, value) {
   return this;
 };
 
+Item.prototype.setData = function setData(data) {
+  var self = this;
+  Object.keys(data).forEach(function(key) {
+    self.set(key, data[key]);
+  });
+};
+
 Item.prototype.propertiesHasKey = function hasKey(key) {
   return Object.keys(this.properties).indexOf(key) > -1;
 };

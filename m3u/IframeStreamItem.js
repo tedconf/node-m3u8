@@ -9,6 +9,12 @@ var IframeStreamItem = module.exports = function IframeStreamItem(attributes) {
 
 util.inherits(IframeStreamItem, StreamItem);
 
+IframeStreamItem.create = function createIframeStreamItem(data) {
+  var item =  new IframeStreamItem();
+  item.setData(data);
+  return item;
+};
+
 IframeStreamItem.prototype.toString = function toString() {
   return '#EXT-X-I-FRAME-STREAM-INF:' + this.attributes.toString();
 };
