@@ -3,39 +3,19 @@ var util = require('util'),
 
 var PlaylistItem = module.exports = function PlaylistItem() {
   Item.call(this);
-  this.mergeAttributes({
-    duration : null,
-    title    : null
-  });
 };
 
 util.inherits(PlaylistItem, Item);
 
-PlaylistItem.prototype.byteLength = function byteLength(value) {
-  this.attributes.byteLength = parseInt(value, 10);
-};
-
-PlaylistItem.prototype.byteOffset = function byteOffset(value) {
-  this.attributes.byteOffset = parseInt(value, 10);
-};
-
-PlaylistItem.prototype.duration = function duration(duration) {
-  this.attributes.duration = parseFloat(duration);
-};
-
-PlaylistItem.prototype.title = function title(title) {
-  this.attributes.title = title || '';
-};
-
 PlaylistItem.prototype.toString = function toString() {
   var output = [];
-  if (this.attributes.duration != null || this.attributes.title != null) {
-    output.push('#EXTINF:' + [this.attributes.duration, this.attributes.title].join(','));
+  if (this.get('duration') != null || this.get('title') != null) {
+    output.push('#EXTINF:' + [this.get('duration'), this.get('title')].join(','));
   }
-  if (this.attributes.byteLength != null) {
-    output.push('#EXT-X-BYTERANGE:' + [this.attributes.byteLength, this.attributes.byteOffset].join('@'));
+  if (this.byteRange != null) {
+    output.push('#EXT-X-BYTERANGE:' + this.get('byteRange'));
   }
-  output.push(this.attributes.uri);
+  output.push(this.get('URI'));
 
   return output.join('\n');
 };

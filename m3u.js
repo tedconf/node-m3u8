@@ -5,37 +5,69 @@ var M3U = module.exports = function M3U() {
     IframeStreamItem: [],
     MediaItem: []
   };
+  this.properties = {};
 };
 
-M3U.prototype.uri = function setUri(uri) {
-  this.attributes.uri = uri;
+var dataTypes = {
+  iframesOnly    : 'truthy',
+  targetDuration : 'integer',
+  mediaSequence  : 'integer',
+  version        : 'integer'
 };
 
-M3U.prototype.byteLength = function byteLength(value) {
-  this.attributes.byteLength = parseInt(value, 10);
+var keyMap = {
+  'EXT-X-I-FRAMES-ONLY'  : 'iframesOnly',
+  'EXT-X-MEDIA-SEQUENCE' : 'mediaSequence',
+  'EXT-X-PLAYLIST-TYPE'  : 'playlistType',
+  'EXT-X-TARGETDURATION' : 'targetDuration',
+  'EXT-X-VERSION'        : 'version'
 };
 
-M3U.prototype.byteOffset = function byteOffset(value) {
-  this.attributes.byteOffset = parseInt(value, 10);
+M3U.prototype.get = function getProperty(key) {
+  return this.properties[key];
 };
 
-M3U.prototype.duration = function duration(duration) {
-  this.attributes.duration = parseFloat(duration);
-};
+M3U.prototype.set = function setProperty(key, value) {
+  if (keyMap[key]) key = keyMap[key];
 
-M3U.prototype.title = function title(title) {
-  this.attributes.title = title || '';
+  this.properties[key] = coerce[dataTypes[key] || 'unknown'](value);
+
+  return this;
 };
 
 M3U.prototype.toString = function toString() {
   var output = [];
-  if (this.attributes.duration != null || this.attributes.title != null) {
-    output.push('#EXTINF:' + [this.attributes.duration, this.attributes.title].join(','));
+  if (this.items.PlaylistItem.length) {
+    output.push(this.items.PlaylistItem.map(itemToString).join('\n') + '\n');
   }
-  if (this.attributes.byteLength != null) {
-    output.push('#EXT-X-BYTERANGE:' + [this.attributes.byteLength, this.attributes.byteOffset].join('@'));
+  if (this.items.StreamItem.length) {
+    output.push(this.items.StreamItem.map(itemToString).join('\n') + '\n');
   }
-  output.push(this.attributes.uri);
+  if (this.items.IframeStreamItem.length) {
+    output.push(this.items.IframeStreamItem.map(itemToString).join('\n') + '\n');
+  }
+  if (this.items.MediaItem.length) {
+    output.push(this.items.MediaItem.map(itemToString).join('\n') + '\n');
+  }
 
   return output.join('\n');
+};
+
+function itemToString(item) {
+  return item.toString();
+};
+
+var coerce = {
+  boolean: function coerceBoolean(value) {console.log(value);
+    return value ? true : false;
+  },
+  integer: function coerceInteger(value) {
+    return parseInt(value, 10);
+  },
+  truthy: function coerceTruthy(value) {
+    return true;
+  },
+  unknown: function coerceUnknown(value) {
+    return value;
+  }
 };
