@@ -98,7 +98,14 @@ var parse = {
     return value;
   },
   'quoted-string': function parseQuotedString(value) {
-    return value.slice(1,-1);
+    if (Array.isArray(value)) {
+      return value.join(',');
+    } else if (value.indexOf('"') === 0 &&
+               value.lastIndexOf('"') == value.length - 1) {
+      return value.slice(1,-1);
+    } else {
+      return value;
+    }
   },
   'unknown': function parseUnknown(value, key) {
     console.error('Handling value:', value, ' for unknown key:', key);
