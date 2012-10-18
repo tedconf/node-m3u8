@@ -49,14 +49,10 @@ AttributeList.prototype.getCoerced = function getCoerced(key) {
 };
 
 AttributeList.prototype.toString = function toString() {
-  var keyValues = [];
   var self = this;
-  Object.keys(this).forEach(function(key) {
-    var value = self.getCoerced(key);
-    keyValues.push(key.toUpperCase() + '=' + value);
-  });
-
-  return keyValues.join(', ');
+  return Object.keys(this.attributes).map(function(key) {
+    return [key.toUpperCase(), self.getCoerced(key)].join('=');
+  }).join(', ');
 };
 
 var coerce = {
