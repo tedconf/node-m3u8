@@ -35,6 +35,22 @@ M3U.prototype.addItem = function addItem(item) {
   return this;
 };
 
+M3U.prototype.addPlaylistItem = function addPlaylistItem(data) {
+  this.items.PlaylistItem.push(M3U.PlaylistItem.create(data));
+};
+
+M3U.prototype.addMediaItem = function addMediaItem(data) {
+  this.items.MediaItem.push(M3U.MediaItem.create(data));
+};
+
+M3U.prototype.addStreamItem = function addStreamItem(data) {
+  this.items.StreamItem.push(M3U.StreamItem.create(data));
+};
+
+M3U.prototype.addIframeStreamItem = function addIframeStreamItem(data) {
+  this.items.IframeStreamItem.push(M3U.IframeStreamItem.create(data));
+};
+
 M3U.prototype.toString = function toString() {
   var self   = this;
   var output = ['#EXTM3U'];
