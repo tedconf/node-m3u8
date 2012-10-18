@@ -1,4 +1,5 @@
 var AttributeList = module.exports = function AttributeList(attributes) {
+  this.attributes = {};
   this.mergeAttributes(attributes);
 };
 
@@ -33,18 +34,18 @@ AttributeList.prototype.mergeAttributes = function mergeAttributes(attributes) {
 };
 
 AttributeList.prototype.get = function getValue(key) {
-  return this[key];
+  return this.attributes[key];
 };
 
 AttributeList.prototype.set = function setValue(key, value) {
   key = key.toLowerCase();
-  this[key] = parse[dataTypes[key] || 'unknown'](value, key);
+  this.attributes[key] = parse[dataTypes[key] || 'unknown'](value, key);
 
   return this;
 };
 
 AttributeList.prototype.getCoerced = function getCoerced(key) {
-  return coerce[dataTypes[key] || 'unknown'](this[key]);
+  return coerce[dataTypes[key] || 'unknown'](this.get(key));
 };
 
 AttributeList.prototype.toString = function toString() {
