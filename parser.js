@@ -21,6 +21,8 @@ var m3uParser = module.exports = function m3uParser() {
 
 util.inherits(m3uParser, Stream);
 
+m3uParser.M3U = M3U;
+
 m3uParser.createStream = function() {
   return new m3uParser;
 };
