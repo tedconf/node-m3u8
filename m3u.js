@@ -8,19 +8,13 @@ var M3U = module.exports = function M3U() {
   this.properties = {};
 };
 
-var dataTypes = {
-  iframesOnly    : 'truthy',
-  targetDuration : 'integer',
-  mediaSequence  : 'integer',
-  version        : 'integer'
-};
+M3U.PlaylistItem     = require('./m3u/PlaylistItem');
+M3U.MediaItem        = require('./m3u/MediaItem');
+M3U.StreamItem       = require('./m3u/StreamItem');
+M3U.IframeStreamItem = require('./m3u/IframeStreamItem');
 
-var keyMap = {
-  'EXT-X-I-FRAMES-ONLY'  : 'iframesOnly',
-  'EXT-X-MEDIA-SEQUENCE' : 'mediaSequence',
-  'EXT-X-PLAYLIST-TYPE'  : 'playlistType',
-  'EXT-X-TARGETDURATION' : 'targetDuration',
-  'EXT-X-VERSION'        : 'version'
+M3U.create = function createM3U() {
+  return new M3U;
 };
 
 M3U.prototype.get = function getProperty(key) {
@@ -28,8 +22,8 @@ M3U.prototype.get = function getProperty(key) {
 };
 
 M3U.prototype.set = function setProperty(key, value) {
-  if (keyMap[key]) key = keyMap[key];
-
+  var tagKey = propertyMap.findByTag(key);
+  if (tagKey) key = tagKey.key;
   this.properties[key] = coerce[dataTypes[key] || 'unknown'](value);
 
   return this;
@@ -42,21 +36,35 @@ M3U.prototype.addItem = function addItem(item) {
 };
 
 M3U.prototype.toString = function toString() {
-  var output = [];
+  var self   = this;
+  var output = ['#EXTM3U'];
+  Object.keys(this.properties).forEach(function(key) {
+    var tagKey = propertyMap.findByKey(key);
+    var tag = tagKey ? tagKey.tag : key;
+
+    if (dataTypes[key] == 'boolean') {
+      output.push('#' + tag);
+    } else {
+      output.push('#' + tag + ':' + self.get(key));
+    }
+  });
+
   if (this.items.PlaylistItem.length) {
-    output.push(this.items.PlaylistItem.map(itemToString).join('\n') + '\n');
-  }
-  if (this.items.StreamItem.length) {
-    output.push(this.items.StreamItem.map(itemToString).join('\n') + '\n');
-  }
-  if (this.items.IframeStreamItem.length) {
-    output.push(this.items.IframeStreamItem.map(itemToString).join('\n') + '\n');
-  }
-  if (this.items.MediaItem.length) {
-    output.push(this.items.MediaItem.map(itemToString).join('\n') + '\n');
+    output.push(this.items.PlaylistItem.map(itemToString).join('\n'));
+    output.push('#EXT-X-ENDLIST\n');
+  } else {
+    if (this.items.StreamItem.length) {
+      output.push(this.items.StreamItem.map(itemToString).join('\n') + '\n');
+    }
+    if (this.items.IframeStreamItem.length) {
+      output.push(this.items.IframeStreamItem.map(itemToString).join('\n') + '\n');
+    }
+    if (this.items.MediaItem.length) {
+      output.push(this.items.MediaItem.map(itemToString).join('\n') + '\n');
+    }
   }
 
-  return output.join('\n');
+  return output.join('\n') + '\n';
 };
 
 function itemToString(item) {
@@ -64,16 +72,40 @@ function itemToString(item) {
 };
 
 var coerce = {
-  boolean: function coerceBoolean(value) {console.log(value);
-    return value ? true : false;
+  boolean: function coerceBoolean(value) {
+    return true;
   },
   integer: function coerceInteger(value) {
     return parseInt(value, 10);
   },
-  truthy: function coerceTruthy(value) {
-    return true;
-  },
   unknown: function coerceUnknown(value) {
     return value;
   }
+};
+
+var dataTypes = {
+  iframesOnly    : 'boolean',
+  targetDuration : 'integer',
+  mediaSequence  : 'integer',
+  version        : 'integer'
+};
+
+var propertyMap = [
+  { tag: 'EXT-X-I-FRAMES-ONLY',  key: 'iframesOnly' },
+  { tag: 'EXT-X-MEDIA-SEQUENCE', key: 'mediaSequence' },
+  { tag: 'EXT-X-PLAYLIST-TYPE',  key: 'playlistType' },
+  { tag: 'EXT-X-TARGETDURATION', key: 'targetDuration' },
+  { tag: 'EXT-X-VERSION',        key: 'version' }
+];
+
+propertyMap.findByTag = function findByTag(tag) {
+  return propertyMap[propertyMap.map(function(tagKey) {
+    return tagKey.tag;
+  }).indexOf(tag)];
+};
+
+propertyMap.findByKey = function findByKey(key) {
+  return propertyMap[propertyMap.map(function(tagKey) {
+    return tagKey.key;
+  }).indexOf(key)];
 };
