@@ -2,7 +2,7 @@
     "name" : "m3u8",
     "version" : "0.0.1",
     "description" : "streaming m3u8 parser for Apple's HTTP Live Streaming protocol",
-    "main" : "./m3u.js",
+    "main" : "./parser.js",
     "keywords" : [
         "stream",
         "m3u",
@@ -19,7 +19,6 @@
         "examples" : "./examples"
     },
     "dependencies" : {
-        "inflect" : "~0.2.2"
     },
     "devDependencies" : {
         "mocha" : "~1.3.2"
