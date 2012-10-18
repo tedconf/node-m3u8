@@ -35,6 +35,12 @@ M3U.prototype.set = function setProperty(key, value) {
   return this;
 };
 
+M3U.prototype.addItem = function addItem(item) {
+  this.items[item.constructor.name].push(item);
+
+  return this;
+};
+
 M3U.prototype.toString = function toString() {
   var output = [];
   if (this.items.PlaylistItem.length) {

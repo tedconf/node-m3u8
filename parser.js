@@ -73,7 +73,7 @@ m3uParser.prototype.parseLine = function parseLine(line) {
 };
 
 m3uParser.prototype.addItem = function addItem(item) {
-  this.m3u.items[item.constructor.name].push(item);
+  this.m3u.addItem(item);
   this.currentItem = item;
   return item;
 };
