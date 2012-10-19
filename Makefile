@@ -1,5 +1,13 @@
+REPORTER = list
+
 test:
 	./node_modules/.bin/mocha \
-		--reporter list
+		--reporter $(REPORTER) \
+		test/*.js test/acceptance/*.js
 
- .PHONY: test
+test-acceptance:
+	./node_modules/.bin/mocha \
+		--reporter $(REPORTER) \
+		test/acceptance/*.js
+
+.PHONY: test test-acceptance

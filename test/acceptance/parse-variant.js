@@ -1,4 +1,4 @@
-var fs     = require('fs');
+var fs = require('fs');
 
 describe('parsing variant m3u8', function() {
   it('should emit 16 items', function(done) {
@@ -75,8 +75,10 @@ describe('parsing variant m3u8', function() {
 });
 
 function getParser() {
-  var parser      = require('../parser').createStream();
-  var variantFile = fs.createReadStream(__dirname + '/fixtures/variant.m3u8');
+  var parser      = require('../../parser').createStream();
+  var variantFile = fs.createReadStream(
+    __dirname + '/../fixtures/variant.m3u8'
+  );
   variantFile.pipe(parser);
   return parser;
 }

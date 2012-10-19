@@ -44,8 +44,10 @@ describe('parsing iframe m3u8', function() {
 });
 
 function getParser() {
-  var parser      = require('../parser').createStream();
-  var variantFile = fs.createReadStream(__dirname + '/fixtures/iframe.m3u8');
+  var parser      = require('../../parser').createStream();
+  var variantFile = fs.createReadStream(
+    __dirname + '/../fixtures/iframe.m3u8'
+  );
   variantFile.pipe(parser);
   return parser;
 }

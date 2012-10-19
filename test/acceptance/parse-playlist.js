@@ -45,8 +45,10 @@ describe('parsing playlist m3u8', function() {
 });
 
 function getParser() {
-  var parser      = require('../parser').createStream();
-  var variantFile = fs.createReadStream(__dirname + '/fixtures/playlist.m3u8');
+  var parser      = require('../../parser').createStream();
+  var variantFile = fs.createReadStream(
+    __dirname + '/../fixtures/playlist.m3u8'
+  );
   variantFile.pipe(parser);
   return parser;
 }
