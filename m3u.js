@@ -51,6 +51,13 @@ M3U.prototype.addIframeStreamItem = function addIframeStreamItem(data) {
   this.items.IframeStreamItem.push(M3U.IframeStreamItem.create(data));
 };
 
+M3U.prototype.merge = function merge(m3u) {
+  m3u.items.PlaylistItem[0].set('discontinuity', true);
+  this.items.PlaylistItem = this.items.PlaylistItem.concat(m3u.items.PlaylistItem);
+
+  return this;
+};
+
 M3U.prototype.toString = function toString() {
   var self   = this;
   var output = ['#EXTM3U'];
