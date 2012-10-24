@@ -15,6 +15,9 @@ PlaylistItem.create = function createPlaylistItem(data) {
 
 PlaylistItem.prototype.toString = function toString() {
   var output = [];
+  if (this.get('discontinuity')) {
+    output.push('#EXT-X-DISCONTINUITY');
+  }
   if (this.get('duration') != null || this.get('title') != null) {
     output.push(
       '#EXTINF:' + [this.get('duration'), this.get('title')].join(',')

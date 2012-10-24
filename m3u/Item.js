@@ -3,10 +3,11 @@ var AttributeList = require('./AttributeList');
 var Item = module.exports = function Item(attributes) {
   this.attributes = new AttributeList(attributes);
   this.properties = {
-    byteRange : null,
-    duration  : null,
-    title     : null,
-    uri       : null
+    byteRange     : null,
+    discontinuity : null,
+    duration      : null,
+    title         : null,
+    uri           : null
   };
 };
 
