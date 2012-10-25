@@ -52,7 +52,7 @@ AttributeList.prototype.toString = function toString() {
   var self = this;
   return Object.keys(this.attributes).map(function(key) {
     return [key.toUpperCase(), self.getCoerced(key)].join('=');
-  }).join(', ');
+  }).join(',');
 };
 
 var coerce = {
