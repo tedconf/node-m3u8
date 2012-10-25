@@ -20,7 +20,7 @@ PlaylistItem.prototype.toString = function toString() {
   }
   if (this.get('duration') != null || this.get('title') != null) {
     output.push(
-      '#EXTINF:' + [this.get('duration'), this.get('title')].join(',')
+      '#EXTINF:' + [this.get('duration').toFixed(4), this.get('title')].join(',')
     );
   }
   if (this.get('byteRange') != null) {
