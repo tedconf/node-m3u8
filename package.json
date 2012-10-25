@@ -19,6 +19,7 @@
         "examples" : "./examples"
     },
     "dependencies" : {
+        "chunked-stream": "~0.0.1"
     },
     "devDependencies" : {
         "mocha" : "~1.6.0"

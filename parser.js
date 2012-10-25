@@ -1,5 +1,5 @@
 var util = require('util'),
-    Stream = require('stream'),
+    ChunkedStream = require('chunked-stream'),
     M3U = require('./m3u'),
     PlaylistItem = require('./m3u/PlaylistItem'),
     StreamItem = require('./m3u/StreamItem'),
@@ -10,16 +10,19 @@ var util = require('util'),
 var NON_QUOTED_COMMA = /,(?=(?:[^"]|"[^"]*")*$)/;
 
 var m3uParser = module.exports = function m3uParser() {
-  Stream.apply(this);
-  this.writable = true;
-  this.readable = true;
+  ChunkedStream.apply(this, ['\n', true]);
 
-  this.bufferedLine = null;
-  this.lines = [];
+  this.linesRead = 0;
   this.m3u = new M3U;
+
+  this.on('data', this.parse.bind(this));
+  var self = this;
+  this.on('end', function() {
+    self.emit('m3u', self.m3u);
+  });
 };
 
-util.inherits(m3uParser, Stream);
+util.inherits(m3uParser, ChunkedStream);
 
 m3uParser.M3U = M3U;
 
@@ -27,40 +30,28 @@ m3uParser.createStream = function() {
   return new m3uParser;
 };
 
-m3uParser.prototype.write = function(data) {
-  this.emit('data', data);
-  this.parse(data.toString());
-  return true;
-};
-
-m3uParser.prototype.end = function() {
-  this.parse(this.bufferedLine);
-  this.emit('m3u', this.m3u);
-};
-
-m3uParser.prototype.parse = function parse(data) {
-  var lines = data.split('\n');
-  lines[0] = (this.bufferedLine || '') + lines[0];
-  this.bufferedLine = lines.pop();
-
-  this.lines = this.lines.concat(lines.map(function(line) {
-    return line.trim();
-  }));
-
-  while (this.lines.length) {
-    var line = this.lines.shift();
-    this.emit('line', line);
-    if (['', '#EXTM3U', '#EXT-X-ENDLIST'].indexOf(line) > -1) return true;
-    if (line.indexOf('#') == 0) {
-      this.parseLine(line);
-    } else {
-      if (this.currentItem.attributes.uri != undefined) {
-        this.addItem(new PlaylistItem);
-      }
-      this.currentItem.set('uri', line);
-      this.emit('item', this.currentItem);
+m3uParser.prototype.parse = function parse(line) {
+  line = line.trim();
+  if (this.linesRead == 0) {
+    if (line != '#EXTM3U') {
+      return this.emit('error', new Error(
+        'Non-valid M3U file. First line: ' + line
+      ));
     }
+    this.linesRead++;
+    return true;
   }
+  if (['', '#EXT-X-ENDLIST'].indexOf(line) > -1) return true;
+  if (line.indexOf('#') == 0) {
+    this.parseLine(line);
+  } else {
+    if (this.currentItem.attributes.uri != undefined) {
+      this.addItem(new PlaylistItem);
+    }
+    this.currentItem.set('uri', line);
+    this.emit('item', this.currentItem);
+  }
+  this.linesRead++;
 };
 
 m3uParser.prototype.parseLine = function parseLine(line) {
