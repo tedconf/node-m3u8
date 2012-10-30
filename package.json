@@ -8,15 +8,11 @@
         "m3u8",
         "hls",
         "http live streaming",
-        "stream",
+        "stream"
     ],
     "repository" : {
         "type" : "git",
         "url" : "http://github.com/tedconf/node-m3u8.git"
-    },
-    "directories" : {
-        "lib" : ".",
-        "examples" : "./examples"
     },
     "dependencies" : {
         "chunked-stream": "~0.0.1"
@@ -35,6 +31,5 @@
         "name" : "Mark Bogdanoff",
         "email" : "bog@ted.com",
         "url" : "http://www.ted.com"
-    },
-    "private": true
+    }
 }
