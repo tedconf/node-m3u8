@@ -1,4 +1,4 @@
-var AttributeList = require('./AttributeList');
+var AttributeList    = require('./AttributeList');
 
 var Item = module.exports = function Item(attributes) {
   this.attributes = new AttributeList(attributes);
@@ -27,6 +27,20 @@ Item.prototype.set = function set(key, value) {
   }
 
   return this;
+};
+
+Item.prototype.serialize = function serialize() {
+  return {
+    attributes  : this.attributes.serialize(),
+    properties  : this.properties
+  }
+};
+
+Item.unserialize = function unserialize(constructor, object) {
+  var item = new constructor;
+  item.attributes = AttributeList.unserialize(object.attributes);
+  item.properties = object.properties;
+  return item;
 };
 
 Item.prototype.setData = function setData(data) {

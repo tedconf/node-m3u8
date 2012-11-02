@@ -13,6 +13,8 @@ M3U.MediaItem        = require('./m3u/MediaItem');
 M3U.StreamItem       = require('./m3u/StreamItem');
 M3U.IframeStreamItem = require('./m3u/IframeStreamItem');
 
+var Item = require('./m3u/Item');
+
 M3U.create = function createM3U() {
   return new M3U;
 };
@@ -96,9 +98,33 @@ M3U.prototype.toString = function toString() {
   return output.join('\n') + '\n';
 };
 
+M3U.prototype.serialize = function serialize() {
+  var object = { properties: this.properties, items: {} };
+  var self   = this;
+  Object.keys(this.items).forEach(function(constructor) {
+    object.items[constructor] = self.items[constructor].map(serializeItem);
+  });
+  return object;
+};
+
+M3U.unserialize = function unserialize(object) {
+  var m3u = new M3U;
+  m3u.properties = object.properties;
+  Object.keys(object.items).forEach(function(constructor) {
+    m3u.items[constructor] = object.items[constructor].map(
+      Item.unserialize.bind(null, M3U[constructor])
+    );
+  });
+  return m3u;
+};
+
 function itemToString(item) {
   return item.toString();
-};
+}
+
+function serializeItem(item) {
+  return item.serialize();
+}
 
 var coerce = {
   boolean: function coerceBoolean(value) {

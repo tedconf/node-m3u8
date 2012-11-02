@@ -55,6 +55,16 @@ AttributeList.prototype.toString = function toString() {
   }).join(',');
 };
 
+AttributeList.prototype.serialize = function serialize() {
+  return this.attributes;
+};
+
+AttributeList.unserialize = function unserialize(object) {
+  var list = new AttributeList;
+  list.attributes = object;
+  return list;
+};
+
 var coerce = {
   'boolean': function coerceBoolean(value) {
     return value ? 'YES' : 'NO';
