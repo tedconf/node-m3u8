@@ -60,6 +60,9 @@ M3U.prototype.totalDuration = function totalDuration() {
 };
 
 M3U.prototype.merge = function merge(m3u) {
+  if (m3u.get('targetDuration') > this.get('targetDuration')) {
+    this.set('targetDuration', m3u.get('targetDuration'));
+  }
   m3u.items.PlaylistItem[0].set('discontinuity', true);
   this.items.PlaylistItem = this.items.PlaylistItem.concat(m3u.items.PlaylistItem);
 

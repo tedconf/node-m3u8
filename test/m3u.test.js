@@ -98,6 +98,18 @@ describe('m3u', function() {
         return item.get('discontinuity');
       }).length.should.eql(1);
     });
+
+    it('should use the largest targetDuration', function() {
+      var m3u1 = getM3u();
+      m3u1.set('targetDuration', 10);
+      m3u1.addPlaylistItem({});
+
+      var m3u2 = getM3u();
+      m3u2.set('targetDuration', 11);
+      m3u2.addPlaylistItem({});
+      m3u1.merge(m3u2);
+      m3u1.get('targetDuration').should.eql(11);
+    });
   });
 
   describe('#serialize', function(done) {
