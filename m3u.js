@@ -85,7 +85,10 @@ M3U.prototype.toString = function toString() {
 
   if (this.items.PlaylistItem.length) {
     output.push(this.items.PlaylistItem.map(itemToString).join('\n'));
-    output.push('#EXT-X-ENDLIST\n');
+
+    if (propertyMap.findByKey('playlistType') === 'VOD') {
+      output.push('#EXT-X-ENDLIST\n');
+    }
   } else {
     if (this.items.StreamItem.length) {
       output.push(this.items.StreamItem.map(itemToString).join('\n') + '\n');
