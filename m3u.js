@@ -152,7 +152,7 @@ var dataTypes = {
 };
 
 var propertyMap = [
-  { tag: 'EXT-X-ALLOW-CACHE'     key: 'allowCache' },
+  { tag: 'EXT-X-ALLOW-CACHE',    key: 'allowCache' },
   { tag: 'EXT-X-I-FRAMES-ONLY',  key: 'iframesOnly' },
   { tag: 'EXT-X-MEDIA-SEQUENCE', key: 'mediaSequence' },
   { tag: 'EXT-X-PLAYLIST-TYPE',  key: 'playlistType' },
