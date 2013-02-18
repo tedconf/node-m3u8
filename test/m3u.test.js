@@ -144,6 +144,28 @@ describe('m3u', function() {
       item.should.eql(m3u.items.PlaylistItem[0]);
     });
   });
+
+  describe('writeVOD', function() {
+    it('should return a string ending with #EXT-X-ENDLIST', function() {
+      var m3u1 = getM3u();
+      m3u1.set('playlistType', 'VOD');
+      m3u1.addPlaylistItem({ duration: 1 });
+
+      var output = m3u1.toString();
+      var endStr = '#EXT-X-ENDLIST\n';
+      output.indexOf(endStr).should.eql(output.length - endStr.length);
+    });
+  });
+
+  describe('writeLive', function() {
+    it('should return a string not ending with #EXT-X-ENDLIST', function() {
+      var m3u1 = getM3u();
+      m3u1.addPlaylistItem({});
+
+      var output = m3u1.toString();
+      output.indexOf('#EXT-X-ENDLIST\n').should.eql(-1);
+    });
+  });
 });
 
 function getM3u() {

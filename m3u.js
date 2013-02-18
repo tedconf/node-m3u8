@@ -85,7 +85,10 @@ M3U.prototype.toString = function toString() {
 
   if (this.items.PlaylistItem.length) {
     output.push(this.items.PlaylistItem.map(itemToString).join('\n'));
-    output.push('#EXT-X-ENDLIST\n');
+
+    if (this.get('playlistType') === 'VOD') {
+      output.push('#EXT-X-ENDLIST');
+    }
   } else {
     if (this.items.StreamItem.length) {
       output.push(this.items.StreamItem.map(itemToString).join('\n') + '\n');
@@ -149,6 +152,7 @@ var dataTypes = {
 };
 
 var propertyMap = [
+  { tag: 'EXT-X-ALLOW-CACHE',    key: 'allowCache' },
   { tag: 'EXT-X-I-FRAMES-ONLY',  key: 'iframesOnly' },
   { tag: 'EXT-X-MEDIA-SEQUENCE', key: 'mediaSequence' },
   { tag: 'EXT-X-PLAYLIST-TYPE',  key: 'playlistType' },
