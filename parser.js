@@ -101,7 +101,7 @@ m3uParser.prototype.parseAttributes = function parseAttributes(data) {
   data = data.split(NON_QUOTED_COMMA);
   var self = this;
   return data.map(function(attribute) {
-    var keyValue = attribute.split('=').map(function(str) {
+    var keyValue = attribute.split(/=(.+)/).map(function(str) {
       return str.trim();
     });
     return {
