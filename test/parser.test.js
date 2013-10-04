@@ -29,6 +29,13 @@ describe('parser', function() {
       parser.parseLine('#THIS-IS-A-TAG:some value');
       parser.m3u.get('THIS-IS-A-TAG').should.eql('some value');
     });
+
+    it('should split on first colon only', function() {
+      var parser = getParser();
+
+      parser.parseLine('#THIS-IS-A-TAG:http://www.ted.com');
+      parser.m3u.get('THIS-IS-A-TAG').should.eql('http://www.ted.com');
+    });
   });
 
   describe('#addItem', function() {
