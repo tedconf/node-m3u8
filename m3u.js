@@ -53,6 +53,18 @@ M3U.prototype.addIframeStreamItem = function addIframeStreamItem(data) {
   this.items.IframeStreamItem.push(M3U.IframeStreamItem.create(data));
 };
 
+M3U.prototype.domainDurations = function domainDurations() {
+  var index = 0;
+  return this.items.PlaylistItem.reduce(function(duration, item) {
+    if (item.get('discontinuity')) {
+      index = duration.push(0) - 1;
+    }
+
+    duration[index] += item.get('duration');
+    return duration;
+  }, [0]);
+};
+
 M3U.prototype.totalDuration = function totalDuration() {
   return this.items.PlaylistItem.reduce(function(duration, item) {
     return duration + item.get('duration');

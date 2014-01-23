@@ -79,6 +79,22 @@ describe('m3u', function() {
     });
   });
 
+  describe('#domainDurations', function() {
+    it('should total durations of every PlaylistItem respecting discontinuity domains', function() {
+      var m3u = getM3u();
+
+      m3u.addPlaylistItem({ duration: 10 });
+      m3u.addPlaylistItem({ duration: 4.5 });
+      m3u.addPlaylistItem({ duration: 45 });
+      m3u.items.PlaylistItem[2].set('discontinuity', true);
+      m3u.addPlaylistItem({ duration: 45 });
+      m3u.addPlaylistItem({ duration: 30 });
+      m3u.items.PlaylistItem[4].set('discontinuity', true);
+      m3u.addPlaylistItem({ duration: 26 });
+      m3u.domainDurations().should.eql([14.5, 90, 56]);
+    });
+  });
+
   describe('#merge', function() {
     it('should merge PlaylistItems from two m3us, creating a discontinuity', function() {
       var m3u1 = getM3u();
