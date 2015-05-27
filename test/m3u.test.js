@@ -51,6 +51,17 @@ describe('m3u', function() {
     });
   });
 
+  describe('#removePlaylistItemOutOfRange', function() {
+    it('should thow an error when trying to remove a playlist item out of range', function() {
+      var m3u = getM3u();
+
+      m3u.addPlaylistItem({});
+      m3u.addPlaylistItem({});
+      m3u.removePlaylistItem(3);
+      m3u.items.PlaylistItem.length.should.eql(2);
+    });
+  });
+
 
   describe('#addMediaItem', function() {
     it('should create and add a MediaItem', function() {
