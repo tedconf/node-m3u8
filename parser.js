@@ -13,6 +13,7 @@ var m3uParser = module.exports = function m3uParser() {
   ChunkedStream.apply(this, ['\n', true]);
 
   this.linesRead = 0;
+  this.currentItemDiscontinuous = false;
   this.m3u = new M3U;
 
   this.on('data', this.parse.bind(this));
@@ -45,11 +46,10 @@ m3uParser.prototype.parse = function parse(line) {
   if (line.indexOf('#') == 0) {
     this.parseLine(line);
   } else {
-    if (this.currentItem.attributes.uri != undefined) {
-      this.addItem(new PlaylistItem);
-    }
     this.currentItem.set('uri', line);
+	this.currentItem.set("discontinuity", this.currentItemDiscontinuous);
     this.emit('item', this.currentItem);
+	this.currentItemDiscontinuous = false;
   }
   this.linesRead++;
 };
@@ -69,6 +69,10 @@ m3uParser.prototype.addItem = function addItem(item) {
   this.m3u.addItem(item);
   this.currentItem = item;
   return item;
+};
+
+m3uParser.prototype['EXT-X-DISCONTINUITY'] = function parseDiscontinuity(data) {
+  this.currentItemDiscontinuous = true;
 };
 
 m3uParser.prototype['EXTINF'] = function parseInf(data) {
