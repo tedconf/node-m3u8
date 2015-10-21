@@ -7,7 +7,7 @@ describe('parser', function() {
     var parser = getParser();
 
     parser.on('error', function(error) {
-      error.message.should.include('Non-valid M3U file. First line: ');
+      error.message.should.containEql('Non-valid M3U file. First line: ');
       done();
     });
     parser.write('NOT VALID\n');
@@ -66,6 +66,19 @@ describe('parser', function() {
       parser.EXTINF('4.5,');
       parser['EXT-X-BYTERANGE']('45@90');
       parser.currentItem.get('byteRange').should.eql('45@90');
+    });
+  });
+
+  describe('#EXT-X-DISCONTINUITY', function() {
+    it('should indicate discontinuation on subsequent playlist item', function() {
+      var parser = getParser();
+
+      parser['EXT-X-DISCONTINUITY']();
+      parser.EXTINF('4.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('duration').should.eql(4.5);
+      parser.currentItem.get('title').should.eql('some title');
+      parser.currentItem.get('discontinuity').should.eql(true);
     });
   });
 

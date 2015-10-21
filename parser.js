@@ -77,7 +77,16 @@ m3uParser.prototype['EXTINF'] = function parseInf(data) {
   data = data.split(',');
   this.currentItem.set('duration', parseFloat(data[0]));
   this.currentItem.set('title', data[1]);
+  if (this.playlistDiscontinuity)
+  {
+    this.currentItem.set('discontinuity', true);
+    this.playlistDiscontinuity = false;
+  }
 };
+
+m3uParser.prototype['EXT-X-DISCONTINUITY'] = function parseInf() {
+  this.playlistDiscontinuity = true;
+}
 
 m3uParser.prototype['EXT-X-BYTERANGE'] = function parseByteRange(data) {
   this.currentItem.set('byteRange', data);
