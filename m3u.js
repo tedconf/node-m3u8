@@ -42,10 +42,10 @@ M3U.prototype.addPlaylistItem = function addPlaylistItem(data) {
 };
 
 M3U.prototype.removePlaylistItem = function removePlaylistItem(index) {
-  if(index < this.items.PlaylistItem.length && index >= 0){
+  if (index < this.items.PlaylistItem.length && index >= 0){
     this.items.PlaylistItem.splice(index, 1);
-  }else{
-  	throw new Error('item out of range');
+  } else {
+    throw new RangeError('M3U PlaylistItem out of range');
   }
 };
 
