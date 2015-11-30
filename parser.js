@@ -77,8 +77,7 @@ m3uParser.prototype['EXTINF'] = function parseInf(data) {
   data = data.split(',');
   this.currentItem.set('duration', parseFloat(data[0]));
   this.currentItem.set('title', data[1]);
-  if (this.playlistDiscontinuity)
-  {
+  if (this.playlistDiscontinuity) {
     this.currentItem.set('discontinuity', true);
     this.playlistDiscontinuity = false;
   }
