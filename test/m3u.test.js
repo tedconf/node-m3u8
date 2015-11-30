@@ -58,15 +58,7 @@ describe('m3u', function() {
       m3u.addPlaylistItem({});
       m3u.addPlaylistItem({});
 
-      var error = false;
-      try {
-      	m3u.removePlaylistItem(3);
-      }catch(e){
-      	error = true;
-      }
-
-      error.should.eql(true);
-     
+      m3u.removePlaylistItem.bind(m3u, 3).should.throw(RangeError);
     });
   });
 
