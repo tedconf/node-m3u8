@@ -41,6 +41,36 @@ describe('m3u', function() {
     });
   });
 
+  describe('#removePlaylistItem', function() {
+    it('should remove a PlaylistItem at a specifed index', function() {
+      var m3u = getM3u();
+
+      m3u.addPlaylistItem({});
+      m3u.removePlaylistItem(0);
+      m3u.items.PlaylistItem.length.should.eql(0);
+    });
+  });
+
+  describe('#removePlaylistItemOutOfRange', function() {
+    it('should thow an error when trying to remove a playlist item out of range', function() {
+      var m3u = getM3u();
+
+      m3u.addPlaylistItem({});
+      m3u.addPlaylistItem({});
+
+      var error = false;
+      try {
+      	m3u.removePlaylistItem(3);
+      }catch(e){
+      	error = true;
+      }
+
+      error.should.eql(true);
+     
+    });
+  });
+
+
   describe('#addMediaItem', function() {
     it('should create and add a MediaItem', function() {
       var m3u = getM3u();
