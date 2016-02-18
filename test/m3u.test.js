@@ -198,6 +198,7 @@ describe('m3u', function() {
   describe('writeLive', function() {
     it('should return a string not ending with #EXT-X-ENDLIST', function() {
       var m3u1 = getM3u();
+      m3u1.set('playlistType', 'EVENT');
       m3u1.addPlaylistItem({});
 
       var output = m3u1.toString();
