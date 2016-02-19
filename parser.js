@@ -41,7 +41,12 @@ m3uParser.prototype.parse = function parse(line) {
     this.linesRead++;
     return true;
   }
-  if (['', '#EXT-X-ENDLIST'].indexOf(line) > -1) return true;
+
+  if (['', '#EXT-X-ENDLIST'].indexOf(line) > -1) {
+    this.m3u.set('foundEndlist', true);
+    return true;
+  }
+
   if (line.indexOf('#') == 0) {
     this.parseLine(line);
   } else {

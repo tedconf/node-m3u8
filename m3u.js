@@ -193,7 +193,7 @@ M3U.prototype.toString = function toString() {
   if (this.items.PlaylistItem.length) {
     output.push(this.items.PlaylistItem.map(itemToString).join('\n'));
 
-    if (this.get('playlistType') == null || this.get('playlistType') === 'VOD') {
+    if ((this.get('foundEndlist') && this.get('playlistType') == null) || this.get('playlistType') === 'VOD') {
       output.push('#EXT-X-ENDLIST');
     }
   } else {
