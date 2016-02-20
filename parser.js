@@ -9,11 +9,13 @@ var util = require('util'),
 // used for splitting strings by commas not within double quotes
 var NON_QUOTED_COMMA = /,(?=(?:[^"]|"[^"]*")*$)/;
 
-var m3uParser = module.exports = function m3uParser() {
+var m3uParser = module.exports = function m3uParser(options) {
   ChunkedStream.apply(this, ['\n', true]);
 
   this.linesRead = 0;
   this.m3u = new M3U;
+
+  this.options = options || {};
 
   this.on('data', this.parse.bind(this));
   var self = this;
@@ -26,8 +28,8 @@ util.inherits(m3uParser, ChunkedStream);
 
 m3uParser.M3U = M3U;
 
-m3uParser.createStream = function() {
-  return new m3uParser;
+m3uParser.createStream = function(options) {
+  return new m3uParser(options);
 };
 
 m3uParser.prototype.parse = function parse(line) {
@@ -54,6 +56,11 @@ m3uParser.prototype.parse = function parse(line) {
       this.addItem(new PlaylistItem);
     }
     this.currentItem.set('uri', line);
+
+    if (typeof this.options.beforeItemEmit == 'function') {
+      this.currentItem = this.options.beforeItemEmit(this.currentItem);
+    }
+
     this.emit('item', this.currentItem);
   }
   this.linesRead++;

@@ -94,6 +94,10 @@ M3U.prototype.merge = function merge(m3u) {
 M3U.prototype.slice = function slice(start, end) {
   var m3u = this.clone();
 
+  if (start == null && end == null) {
+    return m3u;
+  }
+
   var len = m3u.items.PlaylistItem.length;
 
   start = !start || start < 0 ? 0 : start;
@@ -124,7 +128,7 @@ M3U.prototype.sliceSeconds = function slice(from, to) {
       }
     }
 
-    if (total >= to && end == null) {
+    if (total <= to && end == null) {
       end = i + 1;
       return true;
     }
@@ -147,6 +151,14 @@ M3U.prototype.sliceDates = function slice(from, to) {
     to = new Date(from.getTime() + to * 1000);
   }
 
+  if (!from) {
+    from = new Date(0);
+  }
+
+  if (!to) {
+    to = new Date();
+  }
+
   if (util.isDate(from) && util.isDate(to) && from > to) {
     throw 'target `to` date value, if available, must be greater than the `from` date value';
   }
@@ -167,8 +179,8 @@ M3U.prototype.sliceDates = function slice(from, to) {
       }
     }
 
-    if (current >= to && end == null) {
-      end = i + 1;
+    if (current > to && end == null) {
+      end = i;
       return true;
     }
   });
@@ -179,6 +191,7 @@ M3U.prototype.sliceDates = function slice(from, to) {
 M3U.prototype.toString = function toString() {
   var self   = this;
   var output = ['#EXTM3U'];
+
   Object.keys(this.properties).forEach(function(key) {
     var tagKey = propertyMap.findByKey(key);
     var tag = tagKey ? tagKey.tag : key;
