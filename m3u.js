@@ -179,7 +179,7 @@ M3U.prototype.sliceDates = function slice(from, to) {
       }
     }
 
-    if (current > to && end == null) {
+    if (current >= to && end == null) {
       end = i;
       return true;
     }
