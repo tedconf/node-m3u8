@@ -105,7 +105,9 @@ M3U.prototype.slice = function slice(start, end) {
     end = len;
   }
 
+  // everytime you slice, the assumption here is to make the outputed playlist look like a VOD
   m3u.set('foundEndlist', true);
+
   m3u.items.PlaylistItem = m3u.items.PlaylistItem.slice(start, end);
 
   return m3u;
