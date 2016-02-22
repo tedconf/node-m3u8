@@ -101,8 +101,11 @@ M3U.prototype.slice = function slice(start, end) {
   var len = m3u.items.PlaylistItem.length;
 
   start = !start || start < 0 ? 0 : start;
-  end = end == null || end > len ? len : end;
+  if (end == null || end > len) {
+    end = len;
+  }
 
+  m3u.set('foundEndlist', true);
   m3u.items.PlaylistItem = m3u.items.PlaylistItem.slice(start, end);
 
   return m3u;
@@ -128,7 +131,7 @@ M3U.prototype.sliceSeconds = function slice(from, to) {
       }
     }
 
-    if (total <= to && end == null) {
+    if (total >= to && end == null) {
       end = i + 1;
       return true;
     }
