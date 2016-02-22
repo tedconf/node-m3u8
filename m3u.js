@@ -123,8 +123,20 @@ M3U.prototype.sliceSeconds = function slice(from, to) {
     throw 'target `to` value, if truthy, must be greater than the `from` value';
   }
 
+  var duration = this.totalDuration();
+  if (util.isNumber(from) && from > duration) {
+    start = this.items.PlaylistItem.length;
+  }
+
+  if (util.isNumber(to) && to <= 0) {
+    end = 0;
+  }
+
+  var currentIndex = 0;
+
   this.items.PlaylistItem.some(function(item, i) {
     total += item.properties.duration;
+    currentIndex = i;
 
     if (total >= from && start == null) {
       start = i;
@@ -164,6 +176,20 @@ M3U.prototype.sliceDates = function slice(from, to) {
     to = new Date();
   }
 
+  var firstDate = ((this.items.PlaylistItem[0] || {}).properties || {}).date;
+  var lastDate = ((this.items.PlaylistItem[this.items.PlaylistItem.length - 1] || {}).properties || {}).date;
+  if (!firstDate || !lastDate) {
+    throw 'Playlist segments does look like that they have a valid date field, you must specify EXT-X-PROGRAM-DATE-TIME for each segment in order to sliceDate(), or set the date on your own using the beforeItemEmit hook when you setup the parser.';
+  }
+
+  if (from > lastDate) {
+    start = this.items.PlaylistItem.length;
+  }
+
+  if (to <= firstDate) {
+    end = 0;
+  }
+
   if (util.isDate(from) && util.isDate(to) && from > to) {
     throw 'target `to` date value, if available, must be greater than the `from` date value';
   }
@@ -172,10 +198,6 @@ M3U.prototype.sliceDates = function slice(from, to) {
 
   this.items.PlaylistItem.some(function(item, i) {
     current = item.properties.date;
-
-    if (!current) {
-      throw 'Playlist segment does not have a date field, you must specify EXT-X-PROGRAM-DATE-TIME for each segment in order to sliceDate()';
-    }
 
     if (current >= from && start == null) {
       start = i;
@@ -201,6 +223,9 @@ M3U.prototype.toString = function toString() {
     var tagKey = propertyMap.findByKey(key);
     var tag = tagKey ? tagKey.tag : key;
 
+    if (ignoredProperties[key]) {
+      return;
+    }
     if (dataTypes[key] == 'boolean') {
       output.push('#' + tag);
     } else {
@@ -235,6 +260,9 @@ M3U.prototype.clone = function clone() {
 
 M3U.prototype.serialize = function serialize() {
   var object = { properties: this.properties, items: {} };
+  object.properties.totalDuration = this.totalDuration();
+  delete object.properties.foundEndlist;
+
   var self   = this;
   Object.keys(this.items).forEach(function(constructor) {
     object.items[constructor] = self.items[constructor].map(serializeItem);
@@ -245,6 +273,8 @@ M3U.prototype.serialize = function serialize() {
 M3U.unserialize = function unserialize(object) {
   var m3u = new M3U;
   m3u.properties = object.properties;
+  delete m3u.properties.totalDuration;
+
   Object.keys(object.items).forEach(function(constructor) {
     m3u.items[constructor] = object.items[constructor].map(
       Item.unserialize.bind(null, M3U[constructor])
@@ -271,6 +301,10 @@ var coerce = {
   unknown: function coerceUnknown(value) {
     return value;
   }
+};
+
+var ignoredProperties = {
+  foundEndlist    : 1
 };
 
 var dataTypes = {
