@@ -31,9 +31,12 @@ Item.prototype.set = function set(key, value) {
 };
 
 Item.prototype.serialize = function serialize() {
+  var attrs = JSON.parse(JSON.stringify(this.properties));
+  attrs.date = attrs.date ? new Date(attrs.date) : attrs.date;
+
   return {
     attributes  : this.attributes.serialize(),
-    properties  : this.properties
+    properties  : attrs
   }
 };
 

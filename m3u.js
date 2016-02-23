@@ -91,7 +91,7 @@ M3U.prototype.merge = function merge(m3u) {
   return this;
 };
 
-M3U.prototype.slice = function slice(start, end) {
+M3U.prototype.sliceIndex = M3U.prototype.slice = function slice(start, end) {
   var m3u = this.clone();
 
   if (start == null && end == null) {
@@ -105,8 +105,10 @@ M3U.prototype.slice = function slice(start, end) {
     end = len;
   }
 
-  // everytime you slice, the assumption here is to make the outputed playlist look like a VOD
-  m3u.set('foundEndlist', true);
+  // if live and both start & end were within the length of the stream, make it look like a VOD
+  if (! m3u.isVOD() && start < len && end < len) {
+    m3u.set('playlistType', 'VOD');
+  }
 
   m3u.items.PlaylistItem = m3u.items.PlaylistItem.slice(start, end);
 
@@ -159,6 +161,7 @@ M3U.prototype.sliceDates = function slice(from, to) {
   var end = null;
 
   if (!util.isDate(from) && !util.isDate(to)) {
+    console.log(from, to);
     throw 'sliceDates requires that at least 1 of the arguments to be a Date object';
   }
 
@@ -223,9 +226,10 @@ M3U.prototype.toString = function toString() {
     var tagKey = propertyMap.findByKey(key);
     var tag = tagKey ? tagKey.tag : key;
 
-    if (ignoredProperties[key]) {
+    if (toStringIgnoredProperties[key]) {
       return;
     }
+
     if (dataTypes[key] == 'boolean') {
       output.push('#' + tag);
     } else {
@@ -236,7 +240,7 @@ M3U.prototype.toString = function toString() {
   if (this.items.PlaylistItem.length) {
     output.push(this.items.PlaylistItem.map(itemToString).join('\n'));
 
-    if ((this.get('foundEndlist') && this.get('playlistType') == null) || this.get('playlistType') === 'VOD') {
+    if (this.isVOD()) {
       output.push('#EXT-X-ENDLIST');
     }
   } else {
@@ -254,16 +258,28 @@ M3U.prototype.toString = function toString() {
   return output.join('\n') + '\n';
 };
 
+M3U.prototype.isVOD = function clone() {
+  return this.get('foundEndlist') || this.get('playlistType') === 'VOD';
+};
+
+M3U.prototype.isLive = function clone() {
+  return !this.isVOD();
+};
+
 M3U.prototype.clone = function clone() {
   return M3U.unserialize(this.serialize());
 };
 
-M3U.prototype.serialize = function serialize() {
-  var object = { properties: this.properties, items: {} };
+M3U.prototype.toJSON = function toJSON() {
+  var object = this.serialize();
   object.properties.totalDuration = this.totalDuration();
-  delete object.properties.foundEndlist;
+  return object;
+};
 
-  var self   = this;
+M3U.prototype.serialize = function serialize() {
+  var object = { properties: JSON.parse(JSON.stringify(this.properties)), items: {} };
+
+  var self = this;
   Object.keys(this.items).forEach(function(constructor) {
     object.items[constructor] = self.items[constructor].map(serializeItem);
   });
@@ -303,8 +319,8 @@ var coerce = {
   }
 };
 
-var ignoredProperties = {
-  foundEndlist    : 1
+var toStringIgnoredProperties = {
+  foundEndlist    : true
 };
 
 var dataTypes = {

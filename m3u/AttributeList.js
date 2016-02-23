@@ -56,7 +56,7 @@ AttributeList.prototype.toString = function toString() {
 };
 
 AttributeList.prototype.serialize = function serialize() {
-  return this.attributes;
+  return JSON.parse(JSON.stringify(this.attributes));
 };
 
 AttributeList.unserialize = function unserialize(object) {
