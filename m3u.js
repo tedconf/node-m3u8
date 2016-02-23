@@ -81,13 +81,41 @@ M3U.prototype.totalDuration = function totalDuration() {
   }, 0);
 };
 
-M3U.prototype.merge = function merge(m3u) {
+M3U.prototype.concat = function concat(m3u) {
   if (m3u.get('targetDuration') > this.get('targetDuration')) {
     this.set('targetDuration', m3u.get('targetDuration'));
   }
-  m3u.items.PlaylistItem[0].set('discontinuity', true);
-  this.items.PlaylistItem = this.items.PlaylistItem.concat(m3u.items.PlaylistItem);
 
+  if (m3u.items.PlaylistItem[0]) {
+    m3u.items.PlaylistItem[0].set('discontinuity', true);
+  }
+
+  this.items.PlaylistItem = this.items.PlaylistItem.concat(m3u.items.PlaylistItem);
+  return this;
+};
+
+M3U.prototype.merge = function merge(m3u) {
+  var uri0 = ((m3u.items.PlaylistItem[0] || {}).properties || {}).uri;
+
+  this.concat(m3u);
+
+  var segments = this.items.PlaylistItem;
+  for(var i = 0; i < segments.length; ++i) {
+    for(var j= i + 1; j < segments.length; ++j) {
+      if(segments[i].properties.uri == segments[j].properties.uri) {
+        if (uri0 == segments[j].properties.uri) {
+          segments[i].set('discontinuity', true);
+        }
+        segments.splice(j--, 1);
+      }
+    }
+  }
+
+  if (m3u.get('foundEndlist')) {
+    this.set('foundEndlist', true);
+  }
+
+  this.items.PlaylistItem = segments;
   return this;
 };
 
@@ -293,7 +321,7 @@ M3U.unserialize = function unserialize(object) {
 
   Object.keys(object.items).forEach(function(constructor) {
     m3u.items[constructor] = object.items[constructor].map(
-      Item.unserialize.bind(null, M3U[constructor])
+        Item.unserialize.bind(null, M3U[constructor])
     );
   });
   return m3u;
