@@ -34,14 +34,23 @@ m3uParser.createStream = function(options) {
 
 m3uParser.prototype.parse = function parse(line) {
   line = line.trim();
+
   if (this.linesRead == 0) {
-    if (line != '#EXTM3U') {
+    var extm3uSkipped = false;
+
+    if (line != '#EXTM3U' && !this.options.lax) {
       return this.emit('error', new Error(
         'Non-valid M3U file. First line: ' + line
       ));
     }
+    if (line != '#EXTM3U' && this.options.lax) {
+      extm3uSkipped = true;
+    }
     this.linesRead++;
-    return true;
+
+    if (!extm3uSkipped) {
+      return true;
+    }
   }
 
   if (['', '#EXT-X-ENDLIST'].indexOf(line) > -1) {
