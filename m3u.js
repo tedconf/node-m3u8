@@ -119,7 +119,7 @@ M3U.prototype.merge = function merge(m3u) {
   return this;
 };
 
-M3U.prototype.sliceIndex = M3U.prototype.slice = function slice(start, end) {
+M3U.prototype.slice = M3U.prototype.sliceIndex = function slice(start, end) {
   var m3u = this.clone();
 
   if (start == null && end == null) {
@@ -286,19 +286,19 @@ M3U.prototype.toString = function toString() {
   return output.join('\n') + '\n';
 };
 
-M3U.prototype.isVOD = function clone() {
+M3U.prototype.isVOD = function isVOD () {
   return this.get('foundEndlist') || this.get('playlistType') === 'VOD';
 };
 
-M3U.prototype.isLive = function clone() {
+M3U.prototype.isLive = function isLive () {
   return !this.isVOD();
 };
 
-M3U.prototype.clone = function clone() {
+M3U.prototype.clone = function clone () {
   return M3U.unserialize(this.serialize());
 };
 
-M3U.prototype.toJSON = function toJSON() {
+M3U.prototype.toJSON = function toJSON () {
   var object = this.serialize();
   object.properties.totalDuration = this.totalDuration();
   return object;
