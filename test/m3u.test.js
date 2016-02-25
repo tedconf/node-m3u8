@@ -117,8 +117,8 @@ describe('m3u', function() {
     });
   });
 
-  describe('#merge', function() {
-    it('should merge PlaylistItems from two m3us, creating a discontinuity', function() {
+  describe('#concat', function() {
+    it('should concat PlaylistItems from two m3us, creating a discontinuity', function() {
       var m3u1 = getM3u();
 
       m3u1.addPlaylistItem({});
@@ -145,8 +145,91 @@ describe('m3u', function() {
       var m3u2 = getM3u();
       m3u2.set('targetDuration', 11);
       m3u2.addPlaylistItem({});
+      m3u1.concat(m3u2);
+      m3u1.get('targetDuration').should.eql(11);
+    });
+  });
+
+  describe('#merge', function() {
+    it('should uniquely merge PlaylistItems from two m3us, creating a discontinuity', function() {
+      var m3u1 = getM3u();
+
+      m3u1.addPlaylistItem({uri: 'a'});
+      m3u1.addPlaylistItem({uri: 'b'});
+      m3u1.addPlaylistItem({uri: 'c'});
+
+      var m3u2 = getM3u();
+      m3u2.addPlaylistItem({uri: 'c'});
+      m3u2.addPlaylistItem({uri: 'd'});
+
+      var itemWithDiscontinuity = m3u2.items.PlaylistItem[0];
+      m3u1.merge(m3u2);
+
+      itemWithDiscontinuity.get('discontinuity').should.be.true;
+      m3u1.items.PlaylistItem.filter(function(item) {
+        return item.get('discontinuity');
+      }).length.should.eql(1);
+
+      m3u1.items.PlaylistItem.length.should.eql(4);
+    });
+
+    it('should use the largest targetDuration', function() {
+      var m3u1 = getM3u();
+      m3u1.set('targetDuration', 10);
+      m3u1.addPlaylistItem({});
+
+      var m3u2 = getM3u();
+      m3u2.set('targetDuration', 11);
+      m3u2.addPlaylistItem({});
       m3u1.merge(m3u2);
       m3u1.get('targetDuration').should.eql(11);
+    });
+  });
+
+  describe('#slice || #sliceIndex', function() {
+    it('should slice from 1 index to another', function() {
+      var m3u1 = getM3u();
+
+      m3u1.addPlaylistItem({});
+      m3u1.addPlaylistItem({});
+      m3u1.addPlaylistItem({});
+      m3u1.addPlaylistItem({});
+
+      var m3u2 = m3u1.slice(1, 3);
+      m3u2.items.PlaylistItem.length.should.eql(2);
+
+    });
+  });
+
+  describe('#sliceSeconds', function() {
+    it('should sliceSeconds from a specific `second` to another', function() {
+      var m3u1 = getM3u();
+
+      m3u1.addPlaylistItem({duration: 5});
+      m3u1.addPlaylistItem({duration: 5});
+      m3u1.addPlaylistItem({duration: 5});
+      m3u1.addPlaylistItem({duration: 5});
+
+      var m3u2 = m3u1.sliceSeconds(5, 15);
+      m3u2.items.PlaylistItem.length.should.eql(3);
+
+    });
+  });
+
+  describe('#sliceDates', function() {
+    it('should sliceDates from a date to another', function() {
+      var m3u1 = getM3u();
+
+      var ms0 = +new Date();
+
+      m3u1.addPlaylistItem({date: new Date(ms0)});
+      m3u1.addPlaylistItem({date: new Date(ms0 + 5000)});
+      m3u1.addPlaylistItem({date: new Date(ms0 + 10000)});
+      m3u1.addPlaylistItem({date: new Date(ms0 + 15000)});
+
+      var m3u2 = m3u1.sliceDates(new Date(ms0 + 5000), new Date(ms0 + 10001));
+      m3u2.items.PlaylistItem.length.should.eql(2);
+
     });
   });
 
@@ -183,6 +266,28 @@ describe('m3u', function() {
     });
   });
 
+  describe('clone', function() {
+    it('should return a new M3U object with the same items and properties', function() {
+      var item = new M3U.PlaylistItem({ key: 'uri', value: '/path' });
+      var data = {
+        properties: {
+          targetDuration: 10
+        },
+        items: {
+          PlaylistItem: [ item.serialize() ]
+        }
+      };
+      var m3u = M3U.unserialize(data);
+      m3u.properties.should.eql(data.properties);
+      item.should.eql(m3u.items.PlaylistItem[0]);
+
+      var m3u1 = m3u.clone();
+      m3u1.properties.should.eql(data.properties);
+      item.should.eql(m3u1.items.PlaylistItem[0]);
+
+    });
+  });
+
   describe('writeVOD', function() {
     it('should return a string ending with #EXT-X-ENDLIST', function() {
       var m3u1 = getM3u();
@@ -208,9 +313,7 @@ describe('m3u', function() {
 });
 
 function getM3u() {
-  var m3u = M3U.create();
-
-  return m3u;
+  return M3U.create();
 }
 
 function getVariantM3U(callback) {

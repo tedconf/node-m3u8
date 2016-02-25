@@ -13,6 +13,54 @@ describe('parser', function() {
     parser.write('NOT VALID\n');
   });
 
+  describe('#options.lax', function() {
+    it('should forgive if #EXTM3U is not there, this is useful for mergin large and live tails of m3u8', function(done) {
+      var parser = getParser({lax: true});
+      var text = ''
+          // + '#EXTM3U\n'
+          + '#EXT-X-TARGETDURATION:10\n'
+          + '#EXT-X-VERSION:4\n'
+          + '#EXTINF:10,\n'
+          + '1.ts\n'
+          + '#EXTINF:10,\n'
+          + '2.ts\n';
+
+      parser.on('m3u', function() {
+        done();
+      });
+
+      parser.write(text);
+      parser.end();
+    });
+  });
+
+  describe('#options.beforeItemEmit', function() {
+    it('should call beforeItemEmit hook before item emit', function(done) {
+      var called = 0;
+
+      var parser = getParser({beforeItemEmit: function() {
+        called++;
+      }});
+
+      var text = ''
+          + '#EXTM3U\n'
+          + '#EXT-X-TARGETDURATION:10\n'
+          + '#EXT-X-VERSION:4\n'
+          + '#EXTINF:10,\n'
+          + '1.ts\n'
+          + '#EXTINF:10,\n'
+          + '2.ts\n';
+
+      parser.on('m3u', function() {
+        called.should.eql(2);
+        done();
+      });
+
+      parser.write(text);
+      parser.end();
+    });
+  });
+
   describe('#parseLine', function() {
     it('should call known tags', function() {
       var parser = getParser();
@@ -82,6 +130,21 @@ describe('parser', function() {
     });
   });
 
+  describe('#EXT-X-PROGRAM-DATE-TIME', function() {
+    it('should parse date value on subsequent playlist item', function() {
+      var parser = getParser();
+
+      var d = (new Date()).toISOString();
+
+      parser['EXT-X-PROGRAM-DATE-TIME'](d);
+      parser.EXTINF('4.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('duration').should.eql(4.5);
+      parser.currentItem.get('title').should.eql('some title');
+      parser.currentItem.get('date').toISOString().should.eql(d);
+    });
+  });
+
   describe('#EXT-X-STREAM-INF', function() {
     it('should create a new Stream item', function() {
       var parser = getParser();
@@ -126,8 +189,6 @@ describe('parser', function() {
   });
 });
 
-function getParser() {
-  var parser = m3u8.createStream();
-
-  return parser;
+function getParser(options) {
+  return m3u8.createStream(options);
 }

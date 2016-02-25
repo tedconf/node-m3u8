@@ -81,6 +81,8 @@ M3U.prototype.totalDuration = function totalDuration() {
   }, 0);
 };
 
+
+// todo: thought: I think concat() should return a clone, not self mutate.
 M3U.prototype.concat = function concat(m3u) {
   if (m3u.get('targetDuration') > this.get('targetDuration')) {
     this.set('targetDuration', m3u.get('targetDuration'));
@@ -94,6 +96,8 @@ M3U.prototype.concat = function concat(m3u) {
   return this;
 };
 
+// todo: thought: I think merge() should return a clone, not self mutate.
+// this one would break backward compatibility though
 M3U.prototype.merge = function merge(m3u) {
   var uri0 = ((m3u.items.PlaylistItem[0] || {}).properties || {}).uri;
 
