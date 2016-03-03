@@ -240,7 +240,7 @@ describe('m3u', function() {
       m3u1.items.PlaylistItem[6].get('uri').should.be.eql('b.7');
 
       m3u1.items.PlaylistItem[2].get('discontinuity').should.be.true;
-//      m3u1.items.PlaylistItem[4].get('discontinuity').should.be.true;
+      m3u1.items.PlaylistItem[4].get('discontinuity').should.be.true;
       m3u1.items.PlaylistItem[5].get('discontinuity').should.be.true;
       m3u1.items.PlaylistItem[6].get('discontinuity').should.be.true;
     });

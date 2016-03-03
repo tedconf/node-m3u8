@@ -178,7 +178,7 @@ M3U.prototype.mergeByDate = function mergeByDate (m3u, options) {
     var m3u8Gap = m3u.sliceByDate(new Date(gap.starts), new Date(gap.ends));
 
     if (m3u8Gap.items.PlaylistItem.length) {
-      m3u8Gap.items.PlaylistItem[0] && m3uPost.items.PlaylistItem[0].set('discontinuity', true);
+      m3u8Gap.items.PlaylistItem[0] && m3u8Gap.items.PlaylistItem[0].set('discontinuity', true);
       gap.beforeItem.set('discontinuity', true);
       clone.insertPlaylistItemsAfter(m3u8Gap.items.PlaylistItem, gap.afterItem);
     }
