@@ -175,12 +175,12 @@ M3U.prototype.mergeByDate = function mergeByDate (m3u, options) {
 
   var gaps = clone.findDateGaps(options);
   gaps.forEach(function(gap) {
-    var m3u8Gap = m3u.sliceByDate(new Date(gap.starts), new Date(gap.ends));
+    var m3uGap = m3u.sliceByDate(new Date(gap.starts), new Date(gap.ends));
 
-    if (m3u8Gap.items.PlaylistItem.length) {
-      m3u8Gap.items.PlaylistItem[0] && m3u8Gap.items.PlaylistItem[0].set('discontinuity', true);
+    if (m3uGap.items.PlaylistItem.length) {
+      m3uGap.items.PlaylistItem[0] && m3uGap.items.PlaylistItem[0].set('discontinuity', true);
       gap.beforeItem.set('discontinuity', true);
-      clone.insertPlaylistItemsAfter(m3u8Gap.items.PlaylistItem, gap.afterItem);
+      clone.insertPlaylistItemsAfter(m3uGap.items.PlaylistItem, gap.afterItem);
     }
   });
 
