@@ -35,12 +35,36 @@ M3U.prototype.set = function setProperty(key, value) {
 
 M3U.prototype.addItem = function addItem(item) {
   this.items[item.constructor.name].push(item);
-
   return this;
 };
 
 M3U.prototype.addPlaylistItem = function addPlaylistItem(data) {
   this.items.PlaylistItem.push(M3U.PlaylistItem.create(data));
+};
+
+M3U.prototype.insertPlaylistItemsAfter = function insertPlaylistItemsAfter (newItems, afterItem) {
+  var index = this.items.PlaylistItem.length;
+
+  if (!(afterItem instanceof M3U.PlaylistItem)) {
+    afterItem = M3U.PlaylistItem.create(afterItem);
+  }
+
+  newItems = [].concat(newItems).map(function(newItem) {
+    if (!(newItem instanceof M3U.PlaylistItem)) {
+      return M3U.PlaylistItem.create(newItem);
+    }
+    return newItem;
+  });
+
+  this.items.PlaylistItem.some(function(item, i) {
+    if (item.properties.uri == afterItem.properties.uri) {
+      index = i;
+      return true;
+    }
+  });
+
+  this.items.PlaylistItem = this.items.PlaylistItem.slice(0, index + 1).concat(newItems).concat(this.items.PlaylistItem.slice(index + 1));
+  return this;
 };
 
 M3U.prototype.removePlaylistItem = function removePlaylistItem(index) {
@@ -99,11 +123,15 @@ M3U.prototype.concat = function concat(m3u) {
 // todo: thought: I think merge() should return a clone, not self mutate.
 // this one would break backward compatibility though
 M3U.prototype.merge = function merge(m3u) {
-  var uri0 = ((m3u.items.PlaylistItem[0] || {}).properties || {}).uri;
+  if (m3u.get('mediaSequence') < this.get('mediaSequence')) {
+    this.set('mediaSequence', m3u.get('mediaSequence'));
+  }
 
+  var uri0 = ((m3u.items.PlaylistItem[0] || {}).properties || {}).uri;
   this.concat(m3u);
 
   var segments = this.items.PlaylistItem;
+
   for(var i = 0; i < segments.length; ++i) {
     for(var j= i + 1; j < segments.length; ++j) {
       if(segments[i].properties.uri == segments[j].properties.uri) {
@@ -119,9 +147,95 @@ M3U.prototype.merge = function merge(m3u) {
     this.set('foundEndlist', true);
   }
 
-  this.items.PlaylistItem = segments;
   return this;
 };
+
+// todo: thought: I think mergeDates() should return a clone, not self mutate.
+M3U.prototype.mergeDates = function mergeDates (m3uB, options) {
+  options = options || {};
+
+  var clone = this.clone();
+  clone.merge(m3uB);
+  clone.sortDates();
+
+  var dateA0, dateAN, m3uPre, m3uPost;
+  if (this.items.PlaylistItem.length) {
+    dateA0 = this.items.PlaylistItem[0].get('date');
+    dateAN = this.items.PlaylistItem[this.items.PlaylistItem.length - 1].get('date');
+  }
+  m3uPre = dateA0 ? clone.sliceDates(null, new Date((+new Date(dateA0)) - 1000)) : createM3U(); // -1 sec to make it exclusive
+  m3uPost = dateAN ? clone.sliceDates(new Date((+new Date(dateAN)) + 1000)) : createM3U(); // +1 sec to make it exclusive
+
+
+  var gaps = this.findDateGaps(options);
+  gaps.forEach(function(gap) {
+    var m3u8Gap = m3uB.sliceDates(new Date(gap.starts), new Date(gap.ends));
+
+    if (m3u8Gap.items.PlaylistItem.length) {
+      m3u8Gap.items.PlaylistItem[0] && m3uPost.items.PlaylistItem[0].set('discontinuity', true);
+      gap.beforeItem.set('discontinuity', true);
+      this.insertPlaylistItemsAfter(m3u8Gap.items.PlaylistItem, gap.afterItem);
+    }
+  }.bind(this));
+
+  if (m3uPre.items.PlaylistItem.length) {
+    this.items.PlaylistItem[0] && this.items.PlaylistItem[0].set('discontinuity', true);
+  }
+
+  if (m3uPost.items.PlaylistItem.length) {
+    m3uPost.items.PlaylistItem[0].set('discontinuity', true);
+  }
+
+  this.items.PlaylistItem = m3uPre.concat(this).concat(m3uPost).items.PlaylistItem;
+
+  return this;
+};
+
+M3U.prototype.findDateGaps = function findDateGaps (options) {
+  options = options || {};
+  options.msMargin = options.msMargin == null ? 1500 : options.msMargin;
+
+  var gaps = [];
+  var segments = this.items.PlaylistItem;
+  var that = this;
+
+  segments.forEach(function(item, i) {
+    var itemNext = segments[i + 1];
+
+    var se = itemStartsEnds(item);
+    var seNext = itemStartsEnds(itemNext);
+
+    if (seNext && (seNext.starts - se.ends > options.msMargin)) {
+      var duration = (seNext.starts - se.ends) / 1000;
+      gaps.push({
+        index: i + 1,
+        starts: se.ends,
+        ends: seNext.starts,
+        duration: duration,
+        approximateMissingItems: duration / that.get('targetDuration'),
+        beforeItem: itemNext,
+        afterItem: item
+      });
+    }
+  });
+
+  return gaps;
+};
+
+M3U.prototype.sortDates = function sortDates () {
+  this.items.PlaylistItem.sort(function(playlistItem1, playlistItem2) {
+    var d1 = playlistItem1.properties.date;
+    var d2 = playlistItem2.properties.date;
+
+    if (!util.isDate(d1) || !d1 || !util.isDate(d2) || !d2) {
+      throw datesError;
+    }
+
+    return d1 < d2 ? -1 : d1 > d2 ? 1 : 0;
+  });
+  return this;
+};
+
 
 M3U.prototype.slice = M3U.prototype.sliceIndex = function slice(start, end) {
   var m3u = this.clone();
@@ -193,7 +307,6 @@ M3U.prototype.sliceDates = function slice(from, to) {
   var end = null;
 
   if (!util.isDate(from) && !util.isDate(to)) {
-    console.log(from, to);
     throw 'sliceDates requires that at least 1 of the arguments to be a Date object';
   }
 
@@ -213,8 +326,9 @@ M3U.prototype.sliceDates = function slice(from, to) {
 
   var firstDate = ((this.items.PlaylistItem[0] || {}).properties || {}).date;
   var lastDate = ((this.items.PlaylistItem[this.items.PlaylistItem.length - 1] || {}).properties || {}).date;
+
   if (!firstDate || !lastDate) {
-    throw 'Playlist segments does look like that they have a valid date field, you must specify EXT-X-PROGRAM-DATE-TIME for each segment in order to sliceDate(), or set the date on your own using the beforeItemEmit hook when you setup the parser.';
+    throw datesError;
   }
 
   if (from > lastDate) {
@@ -331,6 +445,23 @@ M3U.unserialize = function unserialize(object) {
   return m3u;
 };
 
+function itemStartsEnds(item) {
+  if (!item) {
+    return;
+  }
+
+  var date = item.get('date');
+  if (!util.isDate(date) || !date) {
+    throw datesError;
+  }
+
+  var starts = date.getTime();
+  return {
+    starts: starts,
+    ends: starts + (item.get('duration') * 1000)
+  }
+}
+
 function itemToString(item) {
   return item.toString();
 }
@@ -371,6 +502,8 @@ var propertyMap = [
   { tag: 'EXT-X-VERSION',        key: 'version' }
 ];
 
+var datesError = 'Playlist segments do not look like that they have a valid date fields, you must specify EXT-X-PROGRAM-DATE-TIME for each segment in order to sliceDate(), or set the date on your own using the beforeItemEmit hook when you setup the parser.';
+
 propertyMap.findByTag = function findByTag(tag) {
   return propertyMap[propertyMap.map(function(tagKey) {
     return tagKey.tag;
@@ -382,3 +515,4 @@ propertyMap.findByKey = function findByKey(key) {
     return tagKey.key;
   }).indexOf(key)];
 };
+
