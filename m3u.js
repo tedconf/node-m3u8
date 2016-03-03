@@ -192,7 +192,16 @@ M3U.prototype.mergeByDate = function mergeByDate (m3u, options) {
     m3uPost.items.PlaylistItem[0].set('discontinuity', true);
   }
 
-  return m3uPre.concat(clone).concat(m3uPost)
+  var result = m3uPre.concat(clone).concat(m3uPost);
+
+  var m3uTail = m3uPost.items.PlaylistItem.length ? m3uPost : clone.items.PlaylistItem.length ? clone : m3uPre;
+  if (m3uTail.isVOD()) {
+    result.set('playlistType', 'VOD');
+  } else {
+    result.set('playlistType', 'EVENT');
+  }
+
+  return result;
 };
 
 M3U.prototype.findDateGaps = function findDateGaps (options) {
