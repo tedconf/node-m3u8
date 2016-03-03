@@ -105,32 +105,40 @@ M3U.prototype.totalDuration = function totalDuration() {
   }, 0);
 };
 
+M3U.prototype.concat = function concat (m3u) {
+  var clone = this.clone();
 
-// todo: thought: I think concat() should return a clone, not self mutate.
-M3U.prototype.concat = function concat(m3u) {
-  if (m3u.get('targetDuration') > this.get('targetDuration')) {
-    this.set('targetDuration', m3u.get('targetDuration'));
+  if (m3u.get('targetDuration') > clone.get('targetDuration')) {
+    clone.set('targetDuration', m3u.get('targetDuration'));
   }
 
   if (m3u.items.PlaylistItem[0]) {
     m3u.items.PlaylistItem[0].set('discontinuity', true);
   }
 
-  this.items.PlaylistItem = this.items.PlaylistItem.concat(m3u.items.PlaylistItem);
+  clone.items.PlaylistItem = clone.items.PlaylistItem.concat(m3u.items.PlaylistItem);
+
+  return clone;
+};
+
+// backward-compatible merge function, that just concats and mutates self
+// todo: remove this, since it's really a merge, it's just a concat()
+M3U.prototype.merge = function merge (m3u) {
+  var clone = this.concat(m3u);
+  this.items.PlaylistItem = clone.items.PlaylistItem;
+  this.set('targetDuration', clone.get('targetDuration'));
   return this;
 };
 
-// todo: thought: I think merge() should return a clone, not self mutate.
-// this one would break backward compatibility though
-M3U.prototype.merge = function merge(m3u) {
-  if (m3u.get('mediaSequence') < this.get('mediaSequence')) {
-    this.set('mediaSequence', m3u.get('mediaSequence'));
+M3U.prototype.mergeByUri = function mergeByUri (m3u) {
+  var clone = this.concat(m3u);
+
+  if (m3u.get('mediaSequence') < clone.get('mediaSequence')) {
+    clone.set('mediaSequence', m3u.get('mediaSequence'));
   }
-
   var uri0 = ((m3u.items.PlaylistItem[0] || {}).properties || {}).uri;
-  this.concat(m3u);
 
-  var segments = this.items.PlaylistItem;
+  var segments = clone.items.PlaylistItem;
 
   for(var i = 0; i < segments.length; ++i) {
     for(var j= i + 1; j < segments.length; ++j) {
@@ -144,51 +152,47 @@ M3U.prototype.merge = function merge(m3u) {
   }
 
   if (m3u.get('foundEndlist')) {
-    this.set('foundEndlist', true);
+    clone.set('foundEndlist', true);
   }
 
-  return this;
+  return clone;
 };
 
-// todo: thought: I think mergeDates() should return a clone, not self mutate.
-M3U.prototype.mergeDates = function mergeDates (m3uB, options) {
+M3U.prototype.mergeByDate = function mergeByDate (m3u, options) {
+  var clone = this.clone(m3u);
+
   options = options || {};
 
-  var clone = this.clone();
-  clone.merge(m3uB);
-  clone.sortDates();
-
+  var len = clone.items.PlaylistItem.length;
   var dateA0, dateAN, m3uPre, m3uPost;
-  if (this.items.PlaylistItem.length) {
-    dateA0 = this.items.PlaylistItem[0].get('date');
-    dateAN = this.items.PlaylistItem[this.items.PlaylistItem.length - 1].get('date');
+
+  if (len) {
+    dateA0 = clone.items.PlaylistItem[0].get('date');
+    dateAN = clone.items.PlaylistItem[clone.items.PlaylistItem.length - 1].get('date');
   }
-  m3uPre = dateA0 ? clone.sliceDates(null, new Date((+new Date(dateA0)) - 1000)) : createM3U(); // -1 sec to make it exclusive
-  m3uPost = dateAN ? clone.sliceDates(new Date((+new Date(dateAN)) + 1000)) : createM3U(); // +1 sec to make it exclusive
+  m3uPre = dateA0 ? m3u.sliceByDate(null, new Date((+new Date(dateA0)) - 1)) : createM3U(); // -1 ms to make it exclusive
+  m3uPost = dateAN ? m3u.sliceByDate(new Date((+new Date(dateAN)) + 1)) : createM3U(); // +1 ms to make it exclusive
 
-
-  var gaps = this.findDateGaps(options);
+  var gaps = clone.findDateGaps(options);
   gaps.forEach(function(gap) {
-    var m3u8Gap = m3uB.sliceDates(new Date(gap.starts), new Date(gap.ends));
+    var m3u8Gap = m3u.sliceByDate(new Date(gap.starts), new Date(gap.ends));
 
     if (m3u8Gap.items.PlaylistItem.length) {
       m3u8Gap.items.PlaylistItem[0] && m3uPost.items.PlaylistItem[0].set('discontinuity', true);
       gap.beforeItem.set('discontinuity', true);
-      this.insertPlaylistItemsAfter(m3u8Gap.items.PlaylistItem, gap.afterItem);
+      clone.insertPlaylistItemsAfter(m3u8Gap.items.PlaylistItem, gap.afterItem);
     }
-  }.bind(this));
+  });
 
   if (m3uPre.items.PlaylistItem.length) {
-    this.items.PlaylistItem[0] && this.items.PlaylistItem[0].set('discontinuity', true);
+    clone.items.PlaylistItem[0] && clone.items.PlaylistItem[0].set('discontinuity', true);
   }
 
   if (m3uPost.items.PlaylistItem.length) {
     m3uPost.items.PlaylistItem[0].set('discontinuity', true);
   }
 
-  this.items.PlaylistItem = m3uPre.concat(this).concat(m3uPost).items.PlaylistItem;
-
-  return this;
+  return m3uPre.concat(clone).concat(m3uPost)
 };
 
 M3U.prototype.findDateGaps = function findDateGaps (options) {
@@ -222,22 +226,7 @@ M3U.prototype.findDateGaps = function findDateGaps (options) {
   return gaps;
 };
 
-M3U.prototype.sortDates = function sortDates () {
-  this.items.PlaylistItem.sort(function(playlistItem1, playlistItem2) {
-    var d1 = playlistItem1.properties.date;
-    var d2 = playlistItem2.properties.date;
-
-    if (!util.isDate(d1) || !d1 || !util.isDate(d2) || !d2) {
-      throw datesError;
-    }
-
-    return d1 < d2 ? -1 : d1 > d2 ? 1 : 0;
-  });
-  return this;
-};
-
-
-M3U.prototype.slice = M3U.prototype.sliceIndex = function slice(start, end) {
+M3U.prototype.sliceByIndex = M3U.prototype.slice = function sliceByIndex (start, end) {
   var m3u = this.clone();
 
   if (start == null && end == null) {
@@ -261,7 +250,7 @@ M3U.prototype.slice = M3U.prototype.sliceIndex = function slice(start, end) {
   return m3u;
 };
 
-M3U.prototype.sliceSeconds = function slice(from, to) {
+M3U.prototype.sliceBySeconds = function sliceBySeconds (from, to) {
   var start = null;
   var end = null;
 
@@ -299,15 +288,15 @@ M3U.prototype.sliceSeconds = function slice(from, to) {
     }
   });
 
-  return this.slice(start, end);
+  return this.sliceByIndex(start, end);
 };
 
-M3U.prototype.sliceDates = function slice(from, to) {
+M3U.prototype.sliceByDate = function sliceByDate (from, to) {
   var start = null;
   var end = null;
 
   if (!util.isDate(from) && !util.isDate(to)) {
-    throw 'sliceDates requires that at least 1 of the arguments to be a Date object';
+    throw new Error('at least 1 of the arguments needs to be a Date object');
   }
 
   if (util.isNumber(from)) {
@@ -316,19 +305,19 @@ M3U.prototype.sliceDates = function slice(from, to) {
     to = new Date(from.getTime() + to * 1000);
   }
 
+  var firstDate = ((this.items.PlaylistItem[0] || {}).properties || {}).date;
+  var lastDate = ((this.items.PlaylistItem[this.items.PlaylistItem.length - 1] || {}).properties || {}).date;
+
+  if (!firstDate || !lastDate) {
+    throw new Error('Playlist segments do not look like that they have a valid date fields, you must specify EXT-X-PROGRAM-DATE-TIME for each segment in order to sliceDate(), or set the date on your own using the beforeItemEmit hook when you setup the parser.');
+  }
+
   if (!from) {
     from = new Date(0);
   }
 
   if (!to) {
-    to = new Date();
-  }
-
-  var firstDate = ((this.items.PlaylistItem[0] || {}).properties || {}).date;
-  var lastDate = ((this.items.PlaylistItem[this.items.PlaylistItem.length - 1] || {}).properties || {}).date;
-
-  if (!firstDate || !lastDate) {
-    throw datesError;
+    to = new Date(lastDate.getTime() + 1);
   }
 
   if (from > lastDate) {
@@ -340,7 +329,7 @@ M3U.prototype.sliceDates = function slice(from, to) {
   }
 
   if (util.isDate(from) && util.isDate(to) && from > to) {
-    throw 'target `to` date value, if available, must be greater than the `from` date value';
+    throw new Error('target `to` date value, if available, must be greater than the `from` date value');
   }
 
   var current;
@@ -361,10 +350,10 @@ M3U.prototype.sliceDates = function slice(from, to) {
     }
   });
 
-  return this.slice(start, end);
+  return this.sliceByIndex(start, end);
 };
 
-M3U.prototype.toString = function toString() {
+M3U.prototype.toString = function toString () {
   var self   = this;
   var output = ['#EXTM3U'];
 
@@ -422,7 +411,7 @@ M3U.prototype.toJSON = function toJSON () {
   return object;
 };
 
-M3U.prototype.serialize = function serialize() {
+M3U.prototype.serialize = function serialize () {
   var object = { properties: JSON.parse(JSON.stringify(this.properties)), items: {} };
 
   var self = this;
@@ -432,7 +421,7 @@ M3U.prototype.serialize = function serialize() {
   return object;
 };
 
-M3U.unserialize = function unserialize(object) {
+M3U.unserialize = function unserialize (object) {
   var m3u = new M3U;
   m3u.properties = object.properties;
   delete m3u.properties.totalDuration;
@@ -445,14 +434,14 @@ M3U.unserialize = function unserialize(object) {
   return m3u;
 };
 
-function itemStartsEnds(item) {
+function itemStartsEnds (item) {
   if (!item) {
     return;
   }
 
   var date = item.get('date');
   if (!util.isDate(date) || !date) {
-    throw datesError;
+    throw new Error('Playlist segments do not look like that they have a valid date fields, you must specify EXT-X-PROGRAM-DATE-TIME for each segment in order to sliceDate(), or set the date on your own using the beforeItemEmit hook when you setup the parser.');
   }
 
   var starts = date.getTime();
@@ -462,22 +451,22 @@ function itemStartsEnds(item) {
   }
 }
 
-function itemToString(item) {
+function itemToString (item) {
   return item.toString();
 }
 
-function serializeItem(item) {
+function serializeItem (item) {
   return item.serialize();
 }
 
 var coerce = {
-  boolean: function coerceBoolean(value) {
+  boolean: function coerceBoolean (value) {
     return true;
   },
-  integer: function coerceInteger(value) {
+  integer: function coerceInteger (value) {
     return parseInt(value, 10);
   },
-  unknown: function coerceUnknown(value) {
+  unknown: function coerceUnknown (value) {
     return value;
   }
 };
@@ -502,17 +491,14 @@ var propertyMap = [
   { tag: 'EXT-X-VERSION',        key: 'version' }
 ];
 
-var datesError = 'Playlist segments do not look like that they have a valid date fields, you must specify EXT-X-PROGRAM-DATE-TIME for each segment in order to sliceDate(), or set the date on your own using the beforeItemEmit hook when you setup the parser.';
-
-propertyMap.findByTag = function findByTag(tag) {
+propertyMap.findByTag = function findByTag (tag) {
   return propertyMap[propertyMap.map(function(tagKey) {
     return tagKey.tag;
   }).indexOf(tag)];
 };
 
-propertyMap.findByKey = function findByKey(key) {
+propertyMap.findByKey = function findByKey (key) {
   return propertyMap[propertyMap.map(function(tagKey) {
     return tagKey.key;
   }).indexOf(key)];
 };
-
