@@ -204,6 +204,38 @@ M3U.prototype.mergeByDate = function mergeByDate (m3u, options) {
   return result;
 };
 
+M3U.prototype.sortByDate = function sortByDate () {
+  if (! this.isDateSupported()) {
+    return this;
+  }
+
+  this.items.PlaylistItem.sort(function(playlistItem1, playlistItem2) {
+    var d1 = playlistItem1.properties.date;
+    var d2 = playlistItem2.properties.date;
+
+    return d1 < d2 ? -1 : d1 > d2 ? 1 : 0;
+  });
+
+  return this;
+};
+
+M3U.prototype.sortByUri = function sortByUri (options) {
+  options = options || {};
+
+  this.items.PlaylistItem.sort(function(playlistItem1, playlistItem2) {
+    var u1 = playlistItem1.properties.uri;
+    var u2 = playlistItem2.properties.uri;
+
+    if (!options.useFullPath) {
+      u1 = u1.split('/').pop();
+      u2 = u2.split('/').pop();
+    }
+
+    return u1 < u2 ? -1 : u1 > u2 ? 1 : 0;
+  });
+  return this;
+};
+
 M3U.prototype.findDateGaps = function findDateGaps (options) {
   options = options || {};
   options.msMargin = options.msMargin == null ? 1500 : options.msMargin;
@@ -322,7 +354,7 @@ M3U.prototype.sliceByDate = function sliceByDate (from, to) {
   }
 
   if (!from) {
-    from = new Date(0);
+    from = new Date(firstDate.getTime() - 1);
   }
 
   if (!to) {
@@ -400,6 +432,12 @@ M3U.prototype.toString = function toString () {
   }
 
   return output.join('\n') + '\n';
+};
+
+
+M3U.prototype.isDateSupported = function isDateSupported () {
+  var date = ((this.items.PlaylistItem[0] || {}).properties || {}).date;
+  return date ? util.isDate(date) : undefined;
 };
 
 M3U.prototype.isVOD = function isVOD () {
