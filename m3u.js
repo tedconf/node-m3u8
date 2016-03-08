@@ -353,6 +353,10 @@ M3U.prototype.sliceByDate = function sliceByDate (from, to) {
     throw new Error('Playlist segments do not look like that they have a valid date fields, you must specify EXT-X-PROGRAM-DATE-TIME for each segment in order to sliceDate(), or set the date on your own using the beforeItemEmit hook when you setup the parser.');
   }
 
+  if (util.isDate(from) && util.isDate(to) && from > to) {
+    throw new Error('target `to` date value, if available, must be greater than the `from` date value');
+  }
+
   if (!from) {
     from = new Date(firstDate.getTime() - 1);
   }
@@ -367,10 +371,6 @@ M3U.prototype.sliceByDate = function sliceByDate (from, to) {
 
   if (to <= firstDate) {
     end = 0;
-  }
-
-  if (util.isDate(from) && util.isDate(to) && from > to) {
-    throw new Error('target `to` date value, if available, must be greater than the `from` date value');
   }
 
   var current;
