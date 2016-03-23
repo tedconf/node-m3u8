@@ -316,14 +316,14 @@ M3U.prototype.sliceBySeconds = function sliceBySeconds (from, to) {
     total += item.properties.duration;
     currentIndex = i;
 
-    if (total >= from && start == null) {
+    if (from != null && total >= from && start == null) {
       start = i;
       if (to == null) {
         return true;
       }
     }
 
-    if (total >= to && end == null) {
+    if (to != null && total >= to && end == null) {
       end = i + 1;
       return true;
     }
@@ -378,14 +378,14 @@ M3U.prototype.sliceByDate = function sliceByDate (from, to) {
   this.items.PlaylistItem.some(function(item, i) {
     current = item.properties.date;
 
-    if (current >= from && start == null) {
+    if (from != null && current >= from && start == null) {
       start = i;
       if (to == null) {
         return true;
       }
     }
 
-    if (current >= to && end == null) {
+    if (to != null && current >= to && end == null) {
       end = i;
       return true;
     }
