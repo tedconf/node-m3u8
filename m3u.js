@@ -1,4 +1,17 @@
-var util = require('util');
+var util;
+try {
+  util = require('util');
+} catch(e) {
+  util = {};
+}
+
+util.isNumber = util.isNumber || function (n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+};
+
+util.isDate = util.isDate || function (d) {
+  return d instanceof Date && !isNaN(d.valueOf());
+};
 
 var M3U = module.exports = function M3U() {
   this.items = {
@@ -392,6 +405,82 @@ M3U.prototype.sliceByDate = function sliceByDate (from, to) {
   });
 
   return this.sliceByIndex(start, end);
+};
+
+M3U.prototype.isRangeWithinIndexBounds = function isRangeWithinSecondsBounds (from, to) {
+
+  var len = this.items.PlaylistItem.length;
+
+  if (!len) {
+    return false;
+  }
+
+  var left = true;
+  var right = true;
+
+  if (from != null) {
+    left = !!this.items.PlaylistItem[from];
+  }
+
+  if (to != null) {
+    right = !!this.items.PlaylistItem[to];
+  }
+
+  return left && right;
+};
+
+M3U.prototype.isRangeWithinSecondsBounds = function isRangeWithinSecondsBounds (from, to) {
+
+  var len = this.items.PlaylistItem.length;
+
+  if (!len) {
+    return false;
+  }
+
+  var left = true;
+  var right = true;
+
+  if (from != null) {
+    left = 0 <= from;
+  }
+
+  if (to != null) {
+    right = to <= this.totalDuration();
+  }
+
+  return left && right;
+};
+
+M3U.prototype.isRangeWithinDateBounds = function isRangeWithinDateBounds (from, to) {
+
+  if (!util.isDate(from) && !util.isDate(to)) {
+    throw new Error('at least 1 of the arguments needs to be a Date object');
+  }
+
+  if (util.isNumber(from)) {
+    from = new Date(to.getTime() - from * 1000);
+  } else if (util.isNumber(to)) {
+    to = new Date(from.getTime() + to * 1000);
+  }
+
+  var len = this.items.PlaylistItem.length;
+
+  if (!len) {
+    return false;
+  }
+
+  var left = true;
+  var right = true;
+
+  if (from != null) {
+    left = this.items.PlaylistItem[0].properties.date <= from;
+  }
+
+  if (to != null) {
+    right = to <= this.items.PlaylistItem[len - 1].properties.date;
+  }
+
+  return left && right;
 };
 
 M3U.prototype.toString = function toString () {
