@@ -407,7 +407,18 @@ M3U.prototype.sliceByDate = function sliceByDate (from, to) {
   return this.sliceByIndex(start, end);
 };
 
-M3U.prototype.isRangeWithinIndexBounds = function isRangeWithinSecondsBounds (from, to) {
+M3U.prototype.isRangeWithinBounds = function isRangeWithinBounds (unit, from, to) {
+  switch (unit) {
+    case 'date':
+      return this.isRangeWithinDateBounds(from, to);
+    case 'seconds':
+      return this.isRangeWithinSecondsBounds(from, to);
+    case 'index':
+      return this.isRangeWithinIndexBounds(from, to);
+  }
+};
+
+M3U.prototype.isRangeWithinIndexBounds = function isRangeWithinIndexBounds (from, to) {
 
   var len = this.items.PlaylistItem.length;
 
