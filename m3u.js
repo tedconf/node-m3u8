@@ -164,8 +164,11 @@ M3U.prototype.mergeByUri = function mergeByUri (m3u) {
     }
   }
 
-  if (m3u.get('foundEndlist')) {
-    clone.set('foundEndlist', true);
+  if (m3u.isVOD()) {
+    clone.set('playlistType', 'VOD');
+  } else {
+    clone.set('playlistType', 'EVENT');
+    clone.set('foundEndlist', false);
   }
 
   return clone;
@@ -212,6 +215,7 @@ M3U.prototype.mergeByDate = function mergeByDate (m3u, options) {
     result.set('playlistType', 'VOD');
   } else {
     result.set('playlistType', 'EVENT');
+    result.set('foundEndlist', false);
   }
 
   return result;
