@@ -314,6 +314,10 @@ M3U.prototype.sliceBySeconds = function sliceBySeconds (from, to) {
     throw 'target `to` value, if truthy, must be greater than the `from` value';
   }
 
+  if (!this.items.PlaylistItem.length) {
+    return this.sliceByIndex();
+  }
+
   var duration = this.totalDuration();
   if (util.isNumber(from) && from > duration) {
     start = this.items.PlaylistItem.length;
@@ -329,7 +333,7 @@ M3U.prototype.sliceBySeconds = function sliceBySeconds (from, to) {
     total += item.properties.duration;
     currentIndex = i;
 
-    if (from != null && total >= from && start == null) {
+    if (from != null && total >= from && start == null) { // left-side-inclusive
       start = i;
       if (to == null) {
         return true;
@@ -337,7 +341,7 @@ M3U.prototype.sliceBySeconds = function sliceBySeconds (from, to) {
     }
 
     if (to != null && total >= to && end == null) {
-      end = i + 1;
+      end = total == to ? i + 1 : i; // right-side-inclusive
       return true;
     }
   });
@@ -351,6 +355,10 @@ M3U.prototype.sliceByDate = function sliceByDate (from, to) {
 
   if (!util.isDate(from) && !util.isDate(to)) {
     throw new Error('at least 1 of the arguments needs to be a Date object');
+  }
+
+  if (!this.items.PlaylistItem.length) {
+    return this.sliceByIndex();
   }
 
   if (util.isNumber(from)) {
@@ -391,7 +399,7 @@ M3U.prototype.sliceByDate = function sliceByDate (from, to) {
   this.items.PlaylistItem.some(function(item, i) {
     current = item.properties.date;
 
-    if (from != null && current >= from && start == null) {
+    if (from != null && current >= from && start == null) { // right-side-inclusive
       start = i;
       if (to == null) {
         return true;
@@ -399,7 +407,7 @@ M3U.prototype.sliceByDate = function sliceByDate (from, to) {
     }
 
     if (to != null && current >= to && end == null) {
-      end = i;
+      end = current == to ? i + 1 : i; // // left-side-inclusive
       return true;
     }
   });
@@ -575,7 +583,7 @@ M3U.unserialize = function unserialize (object) {
 
   Object.keys(object.items).forEach(function(constructor) {
     m3u.items[constructor] = object.items[constructor].map(
-        Item.unserialize.bind(null, M3U[constructor])
+      Item.unserialize.bind(null, M3U[constructor])
     );
   });
   return m3u;
