@@ -124,6 +124,13 @@ M3U.prototype.concat = function concat (m3u) {
 
   clone.items.PlaylistItem = clone.items.PlaylistItem.concat(m3u.items.PlaylistItem);
 
+  if (m3u.isVOD()) {
+    clone.set('playlistType', 'VOD');
+  } else {
+    clone.set('playlistType', 'EVENT');
+    clone.set('foundEndlist', false);
+  }
+
   return clone;
 };
 
