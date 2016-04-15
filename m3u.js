@@ -1,15 +1,8 @@
-var util;
-try {
-  util = require('util');
-} catch(e) {
-  util = {};
-}
-
-util.isNumber = util.isNumber || function (n) {
+var util = {};
+util.isNumber = function (n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 };
-
-util.isDate = util.isDate || function (d) {
+util.isDate = function (d) {
   return d instanceof Date && !isNaN(d.valueOf());
 };
 
@@ -135,7 +128,7 @@ M3U.prototype.concat = function concat (m3u) {
 };
 
 // backward-compatible merge function, that just concats and mutates self
-// todo: remove this, since it's really a merge, it's just a concat()
+// todo: remove this, since it's really not a merge, it's just a concat()
 M3U.prototype.merge = function merge (m3u) {
   var clone = this.concat(m3u);
   this.items.PlaylistItem = clone.items.PlaylistItem;
@@ -143,6 +136,7 @@ M3U.prototype.merge = function merge (m3u) {
   return this;
 };
 
+// todo: too O(n^2) too slow - maybe use a hash of URIs
 M3U.prototype.mergeByUri = function mergeByUri (m3u) {
   var clone = this.concat(m3u);
 
