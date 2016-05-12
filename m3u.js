@@ -187,8 +187,8 @@ M3U.prototype.mergeByDate = function mergeByDate (m3u, options) {
     dateA0 = clone.items.PlaylistItem[0].get('date');
     dateAN = clone.items.PlaylistItem[clone.items.PlaylistItem.length - 1].get('date');
   }
-  m3uPre = dateA0 ? m3u.sliceByDate(null, new Date((+new Date(dateA0)) - 1)) : createM3U(); // -1 ms to make it exclusive
-  m3uPost = dateAN ? m3u.sliceByDate(new Date((+new Date(dateAN)) + 1)) : createM3U(); // +1 ms to make it exclusive
+  m3uPre = dateA0 ? m3u.sliceByDate(null, new Date((+new Date(dateA0)) - 1)) : M3U.create(); // -1 ms to make it exclusive
+  m3uPost = dateAN ? m3u.sliceByDate(new Date((+new Date(dateAN)) + 1)) : M3U.create(); // +1 ms to make it exclusive
 
   var gaps = clone.findDateGaps(options);
   gaps.forEach(function(gap) {
