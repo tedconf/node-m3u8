@@ -561,6 +561,10 @@ M3U.prototype.isLive = function isLive () {
   return !this.isVOD();
 };
 
+M3U.prototype.isMaster = function isMaster () {
+  return !! (this.items.StreamItem.length || this.items.MediaItem.length || this.items.IframeStreamItem.length);
+};
+
 M3U.prototype.clone = function clone () {
   return M3U.unserialize(this.serialize());
 };
