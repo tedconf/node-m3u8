@@ -501,7 +501,7 @@ M3U.prototype.isRangeWithinDateBounds = function isRangeWithinDateBounds (from, 
   }
 
   if (to != null) {
-    right = to <= this.items.PlaylistItem[len - 1].properties.date;
+    right = this.items.PlaylistItem[len - 1].properties.date <= to;
   }
 
   return left && right;
