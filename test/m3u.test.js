@@ -254,10 +254,12 @@ describe('m3u', function() {
       m3u1.addPlaylistItem({});
       m3u1.addPlaylistItem({});
       m3u1.addPlaylistItem({});
+      m3u1.set('mediaSequence', 5);
 
       var m3u2 = m3u1.sliceByIndex(1, 3);
-      m3u2.items.PlaylistItem.length.should.eql(2);
 
+      m3u2.get('mediaSequence').should.eql(6);
+      m3u2.items.PlaylistItem.length.should.eql(2);
     });
   });
 

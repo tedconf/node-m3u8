@@ -147,6 +147,7 @@ M3U.prototype.merge = function merge (m3u) {
 M3U.prototype.mergeByUri = function mergeByUri (m3u) {
   var clone = this.concat(m3u);
 
+  // todo: also, i don't think this is correct
   if (m3u.get('mediaSequence') < clone.get('mediaSequence')) {
     clone.set('mediaSequence', m3u.get('mediaSequence'));
   }
@@ -303,6 +304,13 @@ M3U.prototype.sliceByIndex = M3U.prototype.slice = function sliceByIndex (start,
   if (! m3u.isVOD() && start < len && end < len) {
     m3u.set('playlistType', 'VOD');
   }
+
+  var mediaSequence = m3u.get('mediaSequence');
+  // assume 1 if it doesn't exists https://tools.ietf.org/html/draft-pantos-http-live-streaming-01#section-3.1.2
+  if (!mediaSequence || mediaSequence < 0) {
+    mediaSequence = 1;
+  }
+  m3u.set('mediaSequence', mediaSequence + start);
 
   m3u.items.PlaylistItem = m3u.items.PlaylistItem.slice(start, end);
 
