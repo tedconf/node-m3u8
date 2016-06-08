@@ -216,16 +216,16 @@ describe('m3u', function() {
       var m3u1 = getM3u();
       var ms0 = +new Date() - (24 * 60 * 60 * 1000);
 
-      m3u1.addPlaylistItem({uri: 'a.3', date: new Date(ms0)});
-      m3u1.addPlaylistItem({uri: 'a.4', date: new Date(ms0 + 10000)});
-      m3u1.addPlaylistItem({uri: 'a.6', date: new Date(ms0 + 30000)});
+      m3u1.addPlaylistItem({uri: 'a.3', date: new Date(ms0), duration: 10});
+      m3u1.addPlaylistItem({uri: 'a.4', date: new Date(ms0 + 10000), duration: 10});
+      m3u1.addPlaylistItem({uri: 'a.6', date: new Date(ms0 + 30000), duration: 10});
 
       var m3u2 = getM3u();
-      m3u2.addPlaylistItem({uri: 'b.1', date: new Date(ms0 - 20000)});
-      m3u2.addPlaylistItem({uri: 'b.2', date: new Date(ms0 - 10000)});
-      m3u2.addPlaylistItem({uri: 'b.5', date: new Date(ms0 + 20000)});
-      m3u2.addPlaylistItem({uri: 'b.6', date: new Date(ms0 + 30000)});
-      m3u2.addPlaylistItem({uri: 'b.7', date: new Date(ms0 + 40000)});
+      m3u2.addPlaylistItem({uri: 'b.1', date: new Date(ms0 - 20000), duration: 10});
+      m3u2.addPlaylistItem({uri: 'b.2', date: new Date(ms0 - 10000), duration: 10});
+      m3u2.addPlaylistItem({uri: 'b.5', date: new Date(ms0 + 20000), duration: 10});
+      m3u2.addPlaylistItem({uri: 'b.6', date: new Date(ms0 + 30000), duration: 10});
+      m3u2.addPlaylistItem({uri: 'b.7', date: new Date(ms0 + 40000), duration: 10});
 
       m3u1 = m3u1.mergeByDate(m3u2);
 
@@ -283,14 +283,38 @@ describe('m3u', function() {
       var m3u1 = getM3u();
 
       var ms0 = +new Date();
+      var duration = 10;
 
-      m3u1.addPlaylistItem({date: new Date(ms0)});
-      m3u1.addPlaylistItem({date: new Date(ms0 + 5000)});
-      m3u1.addPlaylistItem({date: new Date(ms0 + 10000)});
-      m3u1.addPlaylistItem({date: new Date(ms0 + 15000)});
+      var len = 4;
+      for (var i = 0; i < len; i++) {
+        m3u1.addPlaylistItem({date: new Date(ms0 + (duration * i * 1000)), duration: duration});
+      }
 
-      var m3u2 = m3u1.sliceByDate(new Date(ms0 + 5000), new Date(ms0 + 10001));
+      var m3uA = m3u1.sliceByDate(new Date(ms0 + 7000), new Date(ms0 + 17000));
+      m3uA.items.PlaylistItem.length.should.eql(2);
+
+      var m3uB = m3u1.sliceByDate(new Date(ms0 + 10000), new Date(ms0 + 20000));
+      m3uB.items.PlaylistItem.length.should.eql(1);
+
+      var m3uC = m3u1.sliceByDate(new Date(ms0 + 10000), new Date(ms0 + 31000));
+      m3uC.items.PlaylistItem.length.should.eql(3);
+
+      var m3uD = m3u1.sliceByDate(new Date(ms0 + 11000), new Date(ms0 + 21000));
+      m3uD.items.PlaylistItem.length.should.eql(2);
+
+      var m3uE = m3u1.sliceByDate(new Date(ms0 + 11000), new Date(ms0 + 20000));
+      m3uE.items.PlaylistItem.length.should.eql(1);
+
+      var m3u2 = m3u1.sliceByDate(new Date(ms0 + 10000), new Date(ms0 + 21000));
+      m3u2.items.PlaylistItem[0].properties.date.valueOf().should.eql((new Date(ms0 + (duration /* *1 */ * 1000))).valueOf());
+      m3u2.items.PlaylistItem[m3u2.items.PlaylistItem.length - 1].properties.date.valueOf().should.eql((new Date(ms0 + (duration * 2 * 1000))).valueOf());
       m3u2.items.PlaylistItem.length.should.eql(2);
+
+      var m3u3 = m3u1.sliceByDate(new Date(ms0 + 10001), new Date(ms0 + 20000));
+      m3u3.items.PlaylistItem.length.should.eql(1);
+
+      var m3u4 = m3u1.sliceByDate(new Date(ms0 + 10000), new Date(ms0 + 20001));
+      m3u4.items.PlaylistItem.length.should.eql(2);
 
     });
   });

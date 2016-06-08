@@ -177,19 +177,23 @@ M3U.prototype.mergeByUri = function mergeByUri (m3u) {
 };
 
 M3U.prototype.mergeByDate = function mergeByDate (m3u, options) {
+
   var clone = this.clone(m3u);
 
   options = options || {};
 
   var len = clone.items.PlaylistItem.length;
-  var dateA0, dateAN, m3uPre, m3uPost;
+  var item0, itemN, dateA0, dateAN, m3uPre, m3uPost;
 
   if (len) {
-    dateA0 = clone.items.PlaylistItem[0].get('date');
-    dateAN = clone.items.PlaylistItem[clone.items.PlaylistItem.length - 1].get('date');
+    item0 = clone.items.PlaylistItem[0];
+    dateA0 = item0.get('date');
+    itemN = clone.items.PlaylistItem[clone.items.PlaylistItem.length - 1];
+    dateAN = itemN.get('date');
   }
-  m3uPre = dateA0 ? m3u.sliceByDate(null, new Date((+new Date(dateA0)) - 1)) : M3U.create(); // -1 ms to make it exclusive
-  m3uPost = dateAN ? m3u.sliceByDate(new Date((+new Date(dateAN)) + 1)) : M3U.create(); // +1 ms to make it exclusive
+
+  m3uPre = dateA0 ? m3u.sliceByDate(null, new Date((+new Date(dateA0)))) : M3U.create();
+  m3uPost = dateAN ? m3u.sliceByDate(new Date((+new Date(dateAN)) + itemN.get('duration') * 1000)) : M3U.create();
 
   var gaps = clone.findDateGaps(options);
   gaps.forEach(function(gap) {
@@ -354,7 +358,9 @@ M3U.prototype.sliceBySeconds = function sliceBySeconds (from, to) {
     }
 
     if (to != null && total >= to && end == null) {
-      end = total == to ? i + 1 : i; // right-side-inclusive
+      // we're adding the +1 here to include the current segment,
+      // it is still considered exclusive, since the current value here is the total duration, so the end of each segment
+      end = i + 1;
       return true;
     }
   });
@@ -407,20 +413,31 @@ M3U.prototype.sliceByDate = function sliceByDate (from, to) {
     end = 0;
   }
 
-  var current;
+  from = from && from.valueOf ? from.valueOf() : from;
+  to = to && to.valueOf ? to.valueOf(): to;
+
+  var currentStart;
+  var currentEnd;
 
   this.items.PlaylistItem.some(function(item, i) {
-    current = item.properties.date;
+    currentStart = new Date(item.properties.date);
+    currentEnd = new Date(item.properties.date);
+    currentEnd.setSeconds(currentStart.getSeconds() + item.properties.duration);
 
-    if (from != null && current >= from && start == null) { // right-side-inclusive
-      start = i;
+    currentStart = currentEnd.valueOf();
+    currentEnd = currentEnd.valueOf();
+
+    if (from != null && currentEnd >= from && start == null) { // right-side-inclusive
+      start = currentEnd == from ? i + 1 : i; // still exclude directly behind segment
       if (to == null) {
         return true;
       }
     }
 
-    if (to != null && current >= to && end == null) {
-      end = current == to ? i + 1 : i; // // left-side-inclusive
+    if (to != null && currentEnd >= to && end == null) {
+      // we're adding the +1 here to include the current segment,
+      // it is still considered exclusive, since the current = date + duration, so the end of each segment
+      end = currentStart >= to ? i + 1 : i;
       return true;
     }
   });
