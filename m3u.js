@@ -45,11 +45,14 @@ M3U.prototype.addItem = function addItem(item) {
 };
 
 M3U.prototype.addPlaylistItem = function addPlaylistItem(data) {
-  this.items.PlaylistItem.push(M3U.PlaylistItem.create(data));
+  var newItem = M3U.PlaylistItem.create(data);
+  this.maybeSetTargetDuration(newItem.get('duration'));
+  this.items.PlaylistItem.push(newItem);
 };
 
 M3U.prototype.insertPlaylistItemsAfter = function insertPlaylistItemsAfter (newItems, afterItem) {
   var index = this.items.PlaylistItem.length;
+  var self = this;
 
   if (!(afterItem instanceof M3U.PlaylistItem)) {
     afterItem = M3U.PlaylistItem.create(afterItem);
@@ -57,8 +60,9 @@ M3U.prototype.insertPlaylistItemsAfter = function insertPlaylistItemsAfter (newI
 
   newItems = [].concat(newItems).map(function(newItem) {
     if (!(newItem instanceof M3U.PlaylistItem)) {
-      return M3U.PlaylistItem.create(newItem);
+      newItem = M3U.PlaylistItem.create(newItem);
     }
+    self.maybeSetTargetDuration(newItem.get('duration'));
     return newItem;
   });
 
@@ -70,6 +74,7 @@ M3U.prototype.insertPlaylistItemsAfter = function insertPlaylistItemsAfter (newI
   });
 
   this.items.PlaylistItem = this.items.PlaylistItem.slice(0, index + 1).concat(newItems).concat(this.items.PlaylistItem.slice(index + 1));
+  this.resetTargetDuration(true);
   return this;
 };
 
@@ -79,6 +84,7 @@ M3U.prototype.removePlaylistItem = function removePlaylistItem(index) {
   } else {
     throw new RangeError('M3U PlaylistItem out of range');
   }
+  this.resetTargetDuration(true);
 };
 
 M3U.prototype.addMediaItem = function addMediaItem(data) {
@@ -111,12 +117,37 @@ M3U.prototype.totalDuration = function totalDuration() {
   }, 0);
 };
 
+// if one is passed in, try it, if none is passed, iterate and find it.
+M3U.prototype.resetTargetDuration = function resetTargetDuration (newTargetDuration) {
+  var self = this;
+
+  // if you just want to set it to a number, don't use this function, nor maybeSetTargetDuration, just use this.set('targetDuration', Math.round(newTargetDuration))
+
+  if (util.isNumber(newTargetDuration)) {
+    this.maybeSetTargetDuration(newTargetDuration);
+  } else {
+    // force reset, so we set it to 0, this way, the 1st item will set it.
+    if (newTargetDuration === true) {
+      this.set('targetDuration', 0);
+    }
+    this.items.PlaylistItem.forEach(function(item) {
+      self.maybeSetTargetDuration(item.get('duration'));
+    });
+  }
+  return this.get('targetDuration');
+};
+
+M3U.prototype.maybeSetTargetDuration  = function maybeSetTargetDuration (newTargetDuration) {
+  // round to nearest integer https://tools.ietf.org/html/draft-pantos-http-live-streaming-19#section-4.3.3.1
+  newTargetDuration = Math.round(newTargetDuration);
+
+  if (newTargetDuration > this.get('targetDuration')) {
+    this.set('targetDuration', newTargetDuration);
+  }
+};
+
 M3U.prototype.concat = function concat (m3u) {
   var clone = this.clone();
-
-  if (m3u.get('targetDuration') > clone.get('targetDuration')) {
-    clone.set('targetDuration', m3u.get('targetDuration'));
-  }
 
   if (m3u.items.PlaylistItem[0]) {
     m3u.items.PlaylistItem[0].set('discontinuity', true);
@@ -131,6 +162,8 @@ M3U.prototype.concat = function concat (m3u) {
     clone.set('foundEndlist', false);
   }
 
+  clone.resetTargetDuration(m3u.get('targetDuration'));
+
   return clone;
 };
 
@@ -139,7 +172,7 @@ M3U.prototype.concat = function concat (m3u) {
 M3U.prototype.merge = function merge (m3u) {
   var clone = this.concat(m3u);
   this.items.PlaylistItem = clone.items.PlaylistItem;
-  this.set('targetDuration', clone.get('targetDuration'));
+  this.resetTargetDuration(clone.get('targetDuration'));
   return this;
 };
 
@@ -162,6 +195,8 @@ M3U.prototype.mergeByUri = function mergeByUri (m3u) {
           segments[i].set('discontinuity', true);
         }
         segments.splice(j--, 1);
+      } else {
+        clone.maybeSetTargetDuration(segments[i].get('duration'));
       }
     }
   }
@@ -317,6 +352,7 @@ M3U.prototype.sliceByIndex = M3U.prototype.slice = function sliceByIndex (start,
   m3u.set('mediaSequence', mediaSequence + start);
 
   m3u.items.PlaylistItem = m3u.items.PlaylistItem.slice(start, end);
+  m3u.resetTargetDuration(true);
 
   return m3u;
 };
