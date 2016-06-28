@@ -158,7 +158,7 @@ M3U.prototype.concat = function concat (m3u) {
   if (m3u.isVOD()) {
     clone.set('playlistType', 'VOD');
   } else {
-    clone.set('playlistType', 'EVENT');
+    delete clone.properties['playlistType'];
     clone.set('foundEndlist', false);
   }
 
@@ -204,7 +204,7 @@ M3U.prototype.mergeByUri = function mergeByUri (m3u) {
   if (m3u.isVOD()) {
     clone.set('playlistType', 'VOD');
   } else {
-    clone.set('playlistType', 'EVENT');
+    delete clone.properties['playlistType'];
     clone.set('foundEndlist', false);
   }
 
@@ -255,7 +255,7 @@ M3U.prototype.mergeByDate = function mergeByDate (m3u, options) {
   if (m3uTail.isVOD()) {
     result.set('playlistType', 'VOD');
   } else {
-    result.set('playlistType', 'EVENT');
+    delete result.properties['playlistType'];
     result.set('foundEndlist', false);
   }
 
