@@ -339,9 +339,25 @@ M3U.prototype.sliceByIndex = M3U.prototype.slice = function sliceByIndex (start,
     end = len;
   }
 
-  // if live and both start & end were within the length of the stream, make it look like a VOD
-  if (! m3u.isVOD() && start < len && end < len) {
-    m3u.set('playlistType', 'VOD');
+  if (m3u.isLive()) {
+    if (start < len && end < len) {
+      // if live and both start & end were within the length of the stream, make it look like a VOD
+      m3u.set('playlistType', 'VOD');
+
+    } else if (start > 0 && end == len) {
+      /*
+          One thing I noticed recently is that if we are implementing a LIVE sliding window, we can't have a `playlistType`, (otherwise Safari refuses to play more than 1 segment)
+
+          https://tools.ietf.org/html/draft-pantos-http-live-streaming-07#page-19
+          > the Playlist file MAY contain an EXT-X-PLAYLIST-TYPE tag
+          > with a value of either EVENT or VOD.  If the tag is present and has a
+          > value of EVENT, the server MUST NOT change or delete any part of the
+          > Playlist file (although it MAY append lines to it)
+
+          So, If we slice an m3u and `isLive()` is true, and the `start` value of slicing is greater than 0, then we need to remove the playlistType
+       */
+      delete m3u.properties['playlistType'];
+    }
   }
 
   var mediaSequence = m3u.get('mediaSequence');
