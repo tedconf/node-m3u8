@@ -41,7 +41,18 @@ m3uParser.prototype.parse = function parse(line) {
     this.linesRead++;
     return true;
   }
-  if (['', '#EXT-X-ENDLIST'].indexOf(line) > -1) return true;
+  
+  if (!line) {
+    return true;
+  } 
+
+  // If a m3u8 file has a #EXT-X-ENDLIST item, it is a VOD, so we change its playlist type to VOD. Otherwise, this item
+  // is missing from the output m3u8 file, and players might think that a video is a LIVE-STREAM even if it is not...
+  if (line === '#EXT-X-ENDLIST') {
+    this.m3u.set('playlistType', 'VOD');
+    return true;
+  } 
+
   if (line.indexOf('#') == 0) {
     this.parseLine(line);
   } else {
