@@ -18,9 +18,9 @@ PlaylistItem.prototype.toString = function toString() {
   var output = Object.keys(attributes.serialize()).map(function(key) {
     var tag = key.toUpperCase();
     var value = attributes.getCoerced(key);
-    return value.length ? [tag, value].join('=') : tag;
+    return value.length ? [tag, value].join(':') : tag;
   });
-  
+
   if (this.get('discontinuity')) {
     output.push('#EXT-X-DISCONTINUITY');
   }
