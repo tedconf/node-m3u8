@@ -4,24 +4,28 @@ var AttributeList = module.exports = function AttributeList(attributes) {
 };
 
 var dataTypes = AttributeList.dataTypes = {
-  'audio'      : 'quoted-string',
-  'autoselect' : 'boolean',
-  'bandwidth'  : 'decimal-integer',
-  'byterange'  : 'enumerated-string',
-  'codecs'     : 'quoted-string',
-  'default'    : 'boolean',
-  'duration'   : 'decimal-floating-point',
-  'forced'     : 'boolean',
-  'group-id'   : 'quoted-string',
-  'language'   : 'quoted-string',
-  'name'       : 'quoted-string',
-  'program-id' : 'decimal-integer',
-  'resolution' : 'decimal-resolution',
-  'subtitles'  : 'quoted-string',
-  'title'      : 'enumerated-string',
-  'type'       : 'enumerated-string',
-  'uri'        : 'quoted-string',
-  'video'      : 'quoted-string'
+  'audio'      				: 'quoted-string',
+	'average-bandwidth' : 'decimal-integer',
+  'autoselect' 				: 'boolean',
+  'bandwidth'  				: 'decimal-integer',
+  'byterange'  				: 'enumerated-string',
+	'closed-captions'		: 'quoted-string',
+  'codecs'     				: 'quoted-string',
+  'default'    				: 'boolean',
+  'duration'   				: 'decimal-floating-point',
+  'forced'     				: 'boolean',
+	'frame-rate'				: 'decimal-floating-point',
+  'group-id'   				: 'quoted-string',
+	'instream-id'				: 'quoted-string',
+  'language'   				: 'quoted-string',
+  'name'       				: 'quoted-string',
+  'program-id' 				: 'decimal-integer',
+  'resolution' 				: 'decimal-resolution',
+  'subtitles'  				: 'quoted-string',
+  'title'      				: 'enumerated-string',
+  'type'       				: 'enumerated-string',
+  'uri'        				: 'quoted-string',
+  'video'      				: 'quoted-string'
 };
 
 AttributeList.prototype.mergeAttributes = function mergeAttributes(attributes) {
