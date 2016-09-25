@@ -10,7 +10,7 @@ Note: this is an updated fork of `m3u8` that fixes a bunch of warnings with unkn
 install
 -------
 
-npm install --save @chovy/m3u8
+    npm install --save @chovy/m3u8
 
 example
 -------
