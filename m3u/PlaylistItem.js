@@ -18,6 +18,13 @@ PlaylistItem.prototype.toString = function toString() {
   if (this.get('discontinuity')) {
     output.push('#EXT-X-DISCONTINUITY');
   }
+  if (this.get('cueOut')){
+    var duration = this.get('cueOut');
+    output.push('#EXT-X-CUE-OUT:DURATION=' + duration);
+  }
+  if (this.get('cueIn')){
+    output.push('#EXT-X-CUE-IN');
+  }
   if (this.get('date')) {
     var date = this.get('date');
     if (date.getMonth) {
