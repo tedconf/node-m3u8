@@ -30,6 +30,13 @@ describe('parser', function() {
       parser.m3u.get('THIS-IS-A-TAG').should.eql('some value');
     });
 
+    it('should set true on m3u on unknown boolean tags', function() {
+        var parser = getParser();
+
+        parser.parseLine('#THIS-IS-A-BOOLEAN-TAG');
+        parser.m3u.get('THIS-IS-A-BOOLEAN-TAG').should.eql(true);
+    });
+
     it('should split on first colon only', function() {
       var parser = getParser();
 
