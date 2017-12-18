@@ -160,6 +160,9 @@ var coerce = {
     return parseInt(value, 10);
   },
   unknown: function coerceUnknown(value) {
+    if (value === undefined) {
+      return true;
+    }
     return value;
   }
 };
