@@ -9,11 +9,13 @@ var util = require('util'),
 // used for splitting strings by commas not within double quotes
 var NON_QUOTED_COMMA = /,(?=(?:[^"]|"[^"]*")*$)/;
 
-var m3uParser = module.exports = function m3uParser() {
+var m3uParser = module.exports = function m3uParser(options) {
   ChunkedStream.apply(this, ['\n', true]);
 
   this.linesRead = 0;
   this.m3u = new M3U;
+
+  this.options = options || {};
 
   this.on('data', this.parse.bind(this));
   var self = this;
@@ -26,22 +28,36 @@ util.inherits(m3uParser, ChunkedStream);
 
 m3uParser.M3U = M3U;
 
-m3uParser.createStream = function() {
-  return new m3uParser;
+m3uParser.createStream = function(options) {
+  return new m3uParser(options);
 };
 
 m3uParser.prototype.parse = function parse(line) {
   line = line.trim();
+
   if (this.linesRead == 0) {
-    if (line != '#EXTM3U') {
+    var extm3uSkipped = false;
+
+    if (line != '#EXTM3U' && !this.options.lax) {
       return this.emit('error', new Error(
         'Non-valid M3U file. First line: ' + line
       ));
     }
+    if (line != '#EXTM3U' && this.options.lax) {
+      extm3uSkipped = true;
+    }
     this.linesRead++;
+
+    if (!extm3uSkipped) {
+      return true;
+    }
+  }
+
+  if (['', '#EXT-X-ENDLIST'].indexOf(line) > -1) {
+    this.m3u.set('foundEndlist', true);
     return true;
   }
-  if (['', '#EXT-X-ENDLIST'].indexOf(line) > -1) return true;
+
   if (line.indexOf('#') == 0) {
     this.parseLine(line);
   } else {
@@ -49,6 +65,11 @@ m3uParser.prototype.parse = function parse(line) {
       this.addItem(new PlaylistItem);
     }
     this.currentItem.set('uri', line);
+
+    if (typeof this.options.beforeItemEmit == 'function') {
+      this.currentItem = this.options.beforeItemEmit(this.currentItem);
+    }
+
     this.emit('item', this.currentItem);
   }
   this.linesRead++;
@@ -81,11 +102,19 @@ m3uParser.prototype['EXTINF'] = function parseInf(data) {
     this.currentItem.set('discontinuity', true);
     this.playlistDiscontinuity = false;
   }
+  if (this.playlistDate) {
+    this.currentItem.set('date', this.playlistDate);
+    this.playlistDate = null;
+  }
+};
+
+m3uParser.prototype['EXT-X-PROGRAM-DATE-TIME'] = function parseInf(data) {
+  this.playlistDate = new Date(data);
 };
 
 m3uParser.prototype['EXT-X-DISCONTINUITY'] = function parseInf() {
   this.playlistDiscontinuity = true;
-}
+};
 
 m3uParser.prototype['EXT-X-BYTERANGE'] = function parseByteRange(data) {
   this.currentItem.set('byteRange', data);
@@ -107,7 +136,7 @@ m3uParser.prototype['EXT-X-MEDIA'] = function(data) {
 
 m3uParser.prototype.parseAttributes = function parseAttributes(data) {
   data = data.split(NON_QUOTED_COMMA);
-  var self = this;
+
   return data.map(function(attribute) {
     var keyValue = attribute.split(/=(.+)/).map(function(str) {
       return str.trim();
