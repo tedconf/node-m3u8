@@ -4,6 +4,7 @@ var Item = module.exports = function Item(attributes) {
   this.attributes = new AttributeList(attributes);
   this.properties = {
     byteRange     : null,
+    daiPlacementOpportunity: null,
     date          : null,
     discontinuity : null,
     duration      : null,

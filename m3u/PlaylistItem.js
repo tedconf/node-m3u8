@@ -25,6 +25,9 @@ PlaylistItem.prototype.toString = function toString() {
     }
     output.push('#EXT-X-PROGRAM-DATE-TIME:' + date);
   }
+  if (this.get('daiPlacementOpportunity')) {
+    output.push('#EXT-X-PLACEMENT-OPPORTUNITY');
+  }
   if (this.get('duration') != null || this.get('title') != null) {
     output.push(
       '#EXTINF:' + [this.get('duration').toFixed(4), this.get('title')].join(',')
