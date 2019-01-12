@@ -5,11 +5,18 @@ node-m3u8 is a streaming m3u8 parser tailored for dealing with [Apple's HTTP
 Live Streaming protocol](http://tools.ietf.org/html/draft-pantos-http-live-streaming).
 It may work for other m3u files, but I have not tested it for those uses.
 
+Note: this is an updated fork of `m3u8` that fixes a bunch of warnings with unknown attributes. These attributes have been accounted for. The main package `m3u8` appears to be dead.
+
+install
+-------
+
+    npm install --save @chovy/m3u8
+
 example
 -------
 
 ``` js
-var m3u8 = require('m3u8');
+var m3u8 = require('@chovy/m3u8');
 var fs   = require('fs');
 
 var parser = m3u8.createStream();
@@ -36,7 +43,7 @@ parser.on('item', function(item) {
 
 The M3U and Item objects are available on m3u8:
 ```
-var m3u8 = require('m3u8');
+var m3u8 = require('@chovy/m3u8');
 
 var m3u = m3u8.M3U.create();
 m3u.addPlaylistItem({
