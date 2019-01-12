@@ -9,6 +9,8 @@ var dataTypes = AttributeList.dataTypes = {
     'autoselect'            : 'boolean',
     'bandwidth'             : 'decimal-integer',
     'byterange'             : 'enumerated-string',
+    'channels'              : 'quoted-string',
+    '_avg-bandwidth'        : 'decimal-integer',
     'closed-captions'       : 'quoted-string',
     'codecs'                : 'quoted-string',
     'default'               : 'boolean',
