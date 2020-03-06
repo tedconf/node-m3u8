@@ -18,7 +18,7 @@
         "chunked-stream": "~0.0.1"
     },
     "devDependencies": {
-        "mocha": "~1.6.0",
+        "mocha": "~7.1.0",
         "sinon": "~1.5.0",
         "should": "7.1.1"
     },
