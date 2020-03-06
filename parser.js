@@ -81,10 +81,24 @@ m3uParser.prototype['EXTINF'] = function parseInf(data) {
     this.currentItem.set('discontinuity', true);
     this.playlistDiscontinuity = false;
   }
+  if (typeof this.cueOut !== 'undefined') {
+    this.currentItem.set('cueout', this.cueOut);
+  }
+  this.currentItem.set('cuein', this.cueIn ? true : false);
 };
 
 m3uParser.prototype['EXT-X-DISCONTINUITY'] = function parseInf() {
   this.playlistDiscontinuity = true;
+}
+
+m3uParser.prototype['EXT-X-CUE-OUT'] = function parseInf(data) {
+  var attr = this.parseAttributes(data);
+  var durationAttr = attr.find(elem => elem.key.toLowerCase() === 'duration');
+  this.cueOut = durationAttr ? durationAttr.value : 0;
+}
+
+m3uParser.prototype['EXT-X-CUE-IN'] = function parseInf() {
+  this.cueIn = true;
 }
 
 m3uParser.prototype['EXT-X-BYTERANGE'] = function parseByteRange(data) {
