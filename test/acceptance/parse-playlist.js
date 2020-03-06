@@ -42,6 +42,42 @@ describe('parsing playlist m3u8', function() {
       });
     });
   });
+
+  describe('11th PlaylistItem', function() {
+    it('has a cue out', function(done) {
+      var parser = getParser();
+
+      parser.on('m3u', function(m3u) {
+        var item = m3u.items.PlaylistItem[10];
+        item.get('cueout').should.equal(30);
+        done();
+      });
+    });
+  });
+
+  describe('13th PlaylistItem', function() {
+    it('has not a cue in', function(done) {
+      var parser = getParser();
+
+      parser.on('m3u', function(m3u) {
+        var item = m3u.items.PlaylistItem[12];
+        item.get('cuein').should.equal(false);
+        done();
+      });
+    });
+  });
+
+  describe('14th PlaylistItem', function() {
+    it('has a cue in', function(done) {
+      var parser = getParser();
+
+      parser.on('m3u', function(m3u) {
+        var item = m3u.items.PlaylistItem[13];
+        item.get('cuein').should.equal(true);
+        done();
+      });
+    });
+  });
 });
 
 function getParser() {

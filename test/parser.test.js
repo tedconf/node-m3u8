@@ -82,6 +82,45 @@ describe('parser', function() {
     });
   });
 
+  describe('#EXT-X-CUE-OUT', function() {
+    it('should indicate cue out with a duration', function() {
+      var parser = getParser();
+
+      parser['EXT-X-CUE-OUT']('DURATION=30');
+      parser.EXTINF('4.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('cueout').should.eql(30);
+    });
+
+    it('should indicate cue out without a duration', function() {
+      var parser = getParser();
+
+      parser['EXT-X-CUE-OUT']('');
+      parser.EXTINF('4.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('cueout').should.eql(0);
+    });
+  });
+
+  describe('#EXT-X-CUE-IN', function() {
+    it('should indicate cue in is true if present', function() {
+      var parser = getParser();
+    
+      parser['EXT-X-CUE-IN']();
+      parser.EXTINF('4.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('cuein').should.eql(true);
+    });
+
+    it('should indicate cue in is false if not present', function() {
+      var parser = getParser();
+    
+      parser.EXTINF('4.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('cuein').should.eql(false);
+    });
+  });
+
   describe('#EXT-X-STREAM-INF', function() {
     it('should create a new Stream item', function() {
       var parser = getParser();
