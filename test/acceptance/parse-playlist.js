@@ -55,27 +55,39 @@ describe('parsing playlist m3u8', function() {
     });
   });
 
-  describe('13th PlaylistItem', function() {
+  describe('14th PlaylistItem', function() {
     it('has not a cue in', function(done) {
       var parser = getParser();
 
       parser.on('m3u', function(m3u) {
-        var item = m3u.items.PlaylistItem[12];
+        var item = m3u.items.PlaylistItem[13];
         should(item.get('cuein')).be.undefined;
         done();
       });
     });
   });
 
-  describe('14th PlaylistItem', function() {
+  describe('13th PlaylistItem', function() {
     it('has a cue in', function(done) {
       var parser = getParser();
 
       parser.on('m3u', function(m3u) {
-        var item = m3u.items.PlaylistItem[13];
+        var item = m3u.items.PlaylistItem[12];
         item.get('cuein').should.equal(true);
         done();
       });
+    });
+  });
+
+  describe('Playlist', function() {
+    it('has cue in in the end', function(done) {
+      var parser = getParser();
+
+      parser.on('m3u', function(m3u) {
+        var item = m3u.items.PlaylistItem[16];
+        item.get('cuein').should.equal(true);
+        done();
+      });      
     });
   });
 });

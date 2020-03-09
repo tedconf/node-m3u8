@@ -109,8 +109,8 @@ describe('parser', function() {
     it('should indicate cue in is true if present', function() {
       var parser = getParser();
     
-      parser['EXT-X-CUE-IN']();
       parser.EXTINF('4.5,some title');
+      parser['EXT-X-CUE-IN']();
       parser.currentItem.constructor.name.should.eql('PlaylistItem');
       parser.currentItem.get('cuein').should.eql(true);
       parser.EXTINF('3.5,some title');

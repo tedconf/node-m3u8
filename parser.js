@@ -85,8 +85,6 @@ m3uParser.prototype['EXTINF'] = function parseInf(data) {
     this.currentItem.set('cueout', this.cueOut);
     this.cueOut = null;
   }
-  this.currentItem.set('cuein', this.cueIn ? true : false);
-  this.cueIn = null;
 };
 
 m3uParser.prototype['EXT-X-DISCONTINUITY'] = function parseInf() {
@@ -100,7 +98,7 @@ m3uParser.prototype['EXT-X-CUE-OUT'] = function parseInf(data) {
 }
 
 m3uParser.prototype['EXT-X-CUE-IN'] = function parseInf() {
-  this.cueIn = true;
+  this.currentItem.set('cuein', true);
 }
 
 m3uParser.prototype['EXT-X-BYTERANGE'] = function parseByteRange(data) {
