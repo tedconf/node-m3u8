@@ -83,8 +83,10 @@ m3uParser.prototype['EXTINF'] = function parseInf(data) {
   }
   if (typeof this.cueOut !== 'undefined') {
     this.currentItem.set('cueout', this.cueOut);
+    this.cueOut = null;
   }
   this.currentItem.set('cuein', this.cueIn ? true : false);
+  this.cueIn = null;
 };
 
 m3uParser.prototype['EXT-X-DISCONTINUITY'] = function parseInf() {

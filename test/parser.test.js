@@ -90,6 +90,9 @@ describe('parser', function() {
       parser.EXTINF('4.5,some title');
       parser.currentItem.constructor.name.should.eql('PlaylistItem');
       parser.currentItem.get('cueout').should.eql(30);
+      parser.EXTINF('3.0,another title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      should(parser.currentItem.get('cueout')).be.undefined;
     });
 
     it('should indicate cue out without a duration', function() {
@@ -110,15 +113,11 @@ describe('parser', function() {
       parser.EXTINF('4.5,some title');
       parser.currentItem.constructor.name.should.eql('PlaylistItem');
       parser.currentItem.get('cuein').should.eql(true);
+      parser.EXTINF('3.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      should(parser.currentItem.get('cuein')).be.undefined;
     });
 
-    it('should indicate cue in is false if not present', function() {
-      var parser = getParser();
-    
-      parser.EXTINF('4.5,some title');
-      parser.currentItem.constructor.name.should.eql('PlaylistItem');
-      parser.currentItem.get('cuein').should.eql(false);
-    });
   });
 
   describe('#EXT-X-STREAM-INF', function() {

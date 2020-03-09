@@ -61,7 +61,7 @@ describe('parsing playlist m3u8', function() {
 
       parser.on('m3u', function(m3u) {
         var item = m3u.items.PlaylistItem[12];
-        item.get('cuein').should.equal(false);
+        should(item.get('cuein')).be.undefined;
         done();
       });
     });
