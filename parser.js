@@ -15,6 +15,8 @@ var m3uParser = module.exports = function m3uParser() {
   this.linesRead = 0;
   this.m3u = new M3U;
 
+  this.cueOut = null;
+
   this.on('data', this.parse.bind(this));
   var self = this;
   this.on('end', function() {
@@ -81,7 +83,7 @@ m3uParser.prototype['EXTINF'] = function parseInf(data) {
     this.currentItem.set('discontinuity', true);
     this.playlistDiscontinuity = false;
   }
-  if (typeof this.cueOut !== 'undefined') {
+  if (this.cueOut !== null) {
     this.currentItem.set('cueout', this.cueOut);
     this.cueOut = null;
   }

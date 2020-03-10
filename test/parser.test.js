@@ -92,7 +92,7 @@ describe('parser', function() {
       parser.currentItem.get('cueout').should.eql(30);
       parser.EXTINF('3.0,another title');
       parser.currentItem.constructor.name.should.eql('PlaylistItem');
-      should(parser.currentItem.get('cueout')).be.undefined;
+      should.not.exist(parser.currentItem.get('cueout'));
     });
 
     it('should indicate cue out without a duration', function() {
@@ -102,6 +102,9 @@ describe('parser', function() {
       parser.EXTINF('4.5,some title');
       parser.currentItem.constructor.name.should.eql('PlaylistItem');
       parser.currentItem.get('cueout').should.eql(0);
+      parser.EXTINF('4.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      should.not.exist(parser.currentItem.get('cueout'));
     });
   });
 
@@ -115,7 +118,7 @@ describe('parser', function() {
       parser.currentItem.get('cuein').should.eql(true);
       parser.EXTINF('3.5,some title');
       parser.currentItem.constructor.name.should.eql('PlaylistItem');
-      should(parser.currentItem.get('cuein')).be.undefined;
+      should.not.exist(parser.currentItem.get('cuein'));
     });
 
   });

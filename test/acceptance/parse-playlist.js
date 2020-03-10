@@ -50,6 +50,9 @@ describe('parsing playlist m3u8', function() {
       parser.on('m3u', function(m3u) {
         var item = m3u.items.PlaylistItem[10];
         item.get('cueout').should.equal(30);
+        item = m3u.items.PlaylistItem[11];
+        console.log(item.get('cueout'));
+        should.not.exist(item.get('cueout'));
         done();
       });
     });
@@ -61,7 +64,7 @@ describe('parsing playlist m3u8', function() {
 
       parser.on('m3u', function(m3u) {
         var item = m3u.items.PlaylistItem[13];
-        should(item.get('cuein')).be.undefined;
+        should.not.exist(item.get('cuein'));
         done();
       });
     });
