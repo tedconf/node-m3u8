@@ -96,7 +96,12 @@ m3uParser.prototype['EXT-X-DISCONTINUITY'] = function parseInf() {
 m3uParser.prototype['EXT-X-CUE-OUT'] = function parseInf(data) {
   var attr = this.parseAttributes(data);
   var durationAttr = attr.find(elem => elem.key.toLowerCase() === 'duration');
-  this.cueOut = durationAttr ? durationAttr.value : 0;
+  if(durationAttr) {
+    this.cueOut = durationAttr.value;
+  } else {
+    const duration = parseInt(data);
+    this.cueOut = !isNaN(duration) ? duration : 0;
+  }
 }
 
 m3uParser.prototype['EXT-X-CUE-IN'] = function parseInf() {
