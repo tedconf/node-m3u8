@@ -95,7 +95,7 @@ describe('parser', function() {
       should.not.exist(parser.currentItem.get('cueout'));
     });
 
-    it('should indicate cue out without a duration', function() {
+    it('should indicate cue out with duration 0 ', function() {
       var parser = getParser();
 
       parser['EXT-X-CUE-OUT']('');
@@ -105,6 +105,14 @@ describe('parser', function() {
       parser.EXTINF('4.5,some title');
       parser.currentItem.constructor.name.should.eql('PlaylistItem');
       should.not.exist(parser.currentItem.get('cueout'));
+    });
+
+    it('should indicate cue out duration without duration attr', function() {
+      var parser = getParser();
+      parser['EXT-X-CUE-OUT']('30');
+      parser.EXTINF('4.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('cueout').should.eql(30);
     });
   });
 
