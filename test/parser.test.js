@@ -82,6 +82,55 @@ describe('parser', function() {
     });
   });
 
+  describe('#EXT-X-CUE-OUT', function() {
+    it('should indicate cue out with a duration', function() {
+      var parser = getParser();
+
+      parser['EXT-X-CUE-OUT']('DURATION=30');
+      parser.EXTINF('4.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('cueout').should.eql(30);
+      parser.EXTINF('3.0,another title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      should.not.exist(parser.currentItem.get('cueout'));
+    });
+
+    it('should indicate cue out with duration 0 ', function() {
+      var parser = getParser();
+
+      parser['EXT-X-CUE-OUT']('');
+      parser.EXTINF('4.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('cueout').should.eql(0);
+      parser.EXTINF('4.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      should.not.exist(parser.currentItem.get('cueout'));
+    });
+
+    it('should indicate cue out duration without duration attr', function() {
+      var parser = getParser();
+      parser['EXT-X-CUE-OUT']('30');
+      parser.EXTINF('4.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('cueout').should.eql(30);
+    });
+  });
+
+  describe('#EXT-X-CUE-IN', function() {
+    it('should indicate cue in is true if present', function() {
+      var parser = getParser();
+    
+      parser.EXTINF('4.5,some title');
+      parser['EXT-X-CUE-IN']();
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('cuein').should.eql(true);
+      parser.EXTINF('3.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      should.not.exist(parser.currentItem.get('cuein'));
+    });
+
+  });
+
   describe('#EXT-X-STREAM-INF', function() {
     it('should create a new Stream item', function() {
       var parser = getParser();
