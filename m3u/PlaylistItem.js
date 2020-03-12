@@ -22,6 +22,10 @@ PlaylistItem.prototype.toString = function toString() {
     var duration = this.get('cueout');
     output.push('#EXT-X-CUE-OUT:DURATION=' + duration);
   }
+  if (this.get('cueoutcont')) {
+    var cueOutCont = this.get('cueoutcont');
+    output.push('#EXT-X-CUE-OUT-CONT:' + cueOutCont.offset + "/" + cueOutCont.duration);
+  }
   if (this.get('cuein')) {
     output.push('#EXT-X-CUE-IN');
   }

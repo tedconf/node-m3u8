@@ -116,6 +116,27 @@ describe('parser', function() {
     });
   });
 
+  describe('#EXT-X-CUE-OUT-CONT', function() {
+    it('should indicate cue out cont with progress if present', function() {
+      var parser = getParser();
+
+      parser['EXT-X-CUE-OUT']('30');
+      parser.EXTINF('10,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('cueout').should.eql(30);
+      parser['EXT-X-CUE-OUT-CONT']('10/30');
+      parser.EXTINF('10,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('cont-offset').should.eql(10);
+      parser.currentItem.get('cont-dur').should.eql(30);
+      parser['EXT-X-CUE-OUT-CONT']('14.5/30');
+      parser.EXTINF('4.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('cont-offset').should.eql(14.5);
+      parser.currentItem.get('cont-dur').should.eql(30);
+    });
+  });
+
   describe('#EXT-X-CUE-IN', function() {
     it('should indicate cue in is true if present', function() {
       var parser = getParser();

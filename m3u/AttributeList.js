@@ -23,7 +23,9 @@ var dataTypes = AttributeList.dataTypes = {
   'uri'        : 'quoted-string',
   'video'      : 'quoted-string',
   'cueout'     : 'decimal-integer',
-  'cuein'      : 'boolean'
+  'cuein'      : 'boolean',
+  'cont-offset': 'decimal-floating-point',
+  'cont-dur'   : 'decimal-integer'
 };
 
 AttributeList.prototype.mergeAttributes = function mergeAttributes(attributes) {

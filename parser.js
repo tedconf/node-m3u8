@@ -16,6 +16,7 @@ var m3uParser = module.exports = function m3uParser() {
   this.m3u = new M3U;
 
   this.cueOut = null;
+  this.cueOutCont = null;
 
   this.on('data', this.parse.bind(this));
   var self = this;
@@ -87,6 +88,12 @@ m3uParser.prototype['EXTINF'] = function parseInf(data) {
     this.currentItem.set('cueout', this.cueOut);
     this.cueOut = null;
   }
+
+  if (this.cueOutCont !== null) {
+    this.currentItem.set('cont-offset', this.cueOutCont.offset);
+    this.currentItem.set('cont-dur', this.cueOutCont.duration);
+    this.cueOutCont = null;
+  }
 };
 
 m3uParser.prototype['EXT-X-DISCONTINUITY'] = function parseInf() {
@@ -101,6 +108,15 @@ m3uParser.prototype['EXT-X-CUE-OUT'] = function parseInf(data) {
   } else {
     const duration = parseInt(data);
     this.cueOut = !isNaN(duration) ? duration : 0;
+  }
+}
+
+m3uParser.prototype['EXT-X-CUE-OUT-CONT'] = function parseInf(data) {
+  const m = data.match(/(.+)\/(.+)/);
+  if (m) {
+    const offset = m[1];
+    const duration = m[2];
+    this.cueOutCont = { offset: Number(offset), duration: Number(duration) };
   }
 }
 
