@@ -168,7 +168,8 @@ var dataTypes = {
   iframesOnly    : 'boolean',
   targetDuration : 'integer',
   mediaSequence  : 'integer',
-  version        : 'integer'
+  version        : 'integer',
+  independentSegments : 'boolean'
 };
 
 var propertyMap = [
@@ -177,7 +178,8 @@ var propertyMap = [
   { tag: 'EXT-X-MEDIA-SEQUENCE', key: 'mediaSequence' },
   { tag: 'EXT-X-PLAYLIST-TYPE',  key: 'playlistType' },
   { tag: 'EXT-X-TARGETDURATION', key: 'targetDuration' },
-  { tag: 'EXT-X-VERSION',        key: 'version' }
+  { tag: 'EXT-X-VERSION',        key: 'version' },
+  { tag: 'EXT-X-INDEPENDENT-SEGMENTS', key: 'independentSegments' }
 ];
 
 propertyMap.findByTag = function findByTag(tag) {
