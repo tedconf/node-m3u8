@@ -10,7 +10,7 @@ var dataTypes = AttributeList.dataTypes = {
   'average-bandwidth' : 'decimal-integer',
   'frame-rate'        : 'decimal-floating-point',
   'byterange'         : 'enumerated-string',
-  'channels'          : 'decimal-integer',
+  'channels'          : 'quoted-string',
   'codecs'            : 'quoted-string',
   'default'           : 'boolean',
   'duration'          : 'decimal-floating-point',
