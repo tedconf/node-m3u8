@@ -32,7 +32,8 @@ M3U.prototype.set = function setProperty(key, value) {
 };
 
 M3U.prototype.addItem = function addItem(item) {
-  this.items[item.constructor.name].push(item);
+  var itemClassName = item.constructor.name || item.getClassName();
+  this.items[itemClassName].push(item);
 
   return this;
 };

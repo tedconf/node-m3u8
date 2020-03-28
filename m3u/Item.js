@@ -55,3 +55,7 @@ Item.prototype.setData = function setData(data) {
 Item.prototype.propertiesHasKey = function hasKey(key) {
   return Object.keys(this.properties).indexOf(key) > -1;
 };
+
+Item.prototype.getClassName = function getName() {
+  return this.constructor.toString().match(/function (\w*)/)[1];
+};
