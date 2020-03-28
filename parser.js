@@ -96,6 +96,10 @@ m3uParser.prototype['EXT-X-BYTERANGE'] = function parseByteRange(data) {
   this.currentItem.set('byteRange', data);
 };
 
+m3uParser.prototype['EXT-X-PROGRAM-DATE-TIME'] = function parseProgramDateTime(data) {
+  this.currentItem.set('date', data);
+};
+
 m3uParser.prototype['EXT-X-STREAM-INF'] = function(data) {
   this.addItem(new StreamItem(this.parseAttributes(data)));
 };

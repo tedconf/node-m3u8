@@ -69,6 +69,17 @@ describe('parser', function() {
     });
   });
 
+  describe('#EXT-X-PROGRAM-DATE-TIME', function() {
+    it('should set date on currentItem', function() {
+      var parser = getParser();
+      var programDateTime = '2017-03-23T19:26:41.000+0000';
+
+      parser.EXTINF('4.5,');
+      parser['EXT-X-PROGRAM-DATE-TIME'](programDateTime);
+      parser.currentItem.get('date').should.eql(programDateTime);
+    });
+  });
+
   describe('#EXT-X-DISCONTINUITY', function() {
     it('should indicate discontinuation on subsequent playlist item', function() {
       var parser = getParser();
