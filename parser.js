@@ -44,7 +44,12 @@ m3uParser.prototype.parse = function parse(line) {
     this.linesRead++;
     return true;
   }
-  if (['', '#EXT-X-ENDLIST'].indexOf(line) > -1) return true;
+  switch(['#EXT-X-ENDLIST', ''].indexOf(line)) {
+    case 0:
+      this.m3u.set('playlistType', 'VOD');
+    case 1:
+      return true;
+  }
   if (line.indexOf('#') == 0) {
     this.parseLine(line);
   } else {
