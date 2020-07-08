@@ -17,6 +17,7 @@ var m3uParser = module.exports = function m3uParser() {
 
   this.cueOut = null;
   this.cueOutCont = null;
+  this.assetData = null;
 
   this.on('data', this.parse.bind(this));
   var self = this;
@@ -44,12 +45,7 @@ m3uParser.prototype.parse = function parse(line) {
     this.linesRead++;
     return true;
   }
-  switch(['#EXT-X-ENDLIST', ''].indexOf(line)) {
-    case 0:
-      this.m3u.set('playlistType', 'VOD');
-    case 1:
-      return true;
-  }
+  if (['', '#EXT-X-ENDLIST'].indexOf(line) > -1) return true;
   if (line.indexOf('#') == 0) {
     this.parseLine(line);
   } else {
@@ -92,6 +88,10 @@ m3uParser.prototype['EXTINF'] = function parseInf(data) {
   if (this.cueOut !== null) {
     this.currentItem.set('cueout', this.cueOut);
     this.cueOut = null;
+    if (this.assetData !== null) {
+      this.currentItem.set('assetdata', this.assetData);
+      this.assetData = null;
+    }
   }
 
   if (this.cueOutCont !== null) {
@@ -129,6 +129,10 @@ m3uParser.prototype['EXT-X-CUE-IN'] = function parseInf() {
   this.currentItem.set('cuein', true);
 }
 
+m3uParser.prototype['EXT-X-ASSET'] = function parseInf(data) {
+  this.assetData = data;
+};
+
 m3uParser.prototype['EXT-X-BYTERANGE'] = function parseByteRange(data) {
   this.currentItem.set('byteRange', data);
 };
@@ -146,6 +150,8 @@ m3uParser.prototype['EXT-X-MEDIA'] = function(data) {
   this.addItem(new MediaItem(this.parseAttributes(data)));
   this.emit('item', this.currentItem);
 };
+
+
 
 m3uParser.prototype.parseAttributes = function parseAttributes(data) {
   data = data.split(NON_QUOTED_COMMA);
