@@ -194,6 +194,18 @@ describe('parser', function() {
       keyValues[2].value.should.eql('NO');
     });
   });
+
+  describe('#EXT-X-ASSET', function() {
+    it('should return asset metadata', function() {
+      var parser = getParser();
+
+      parser['EXT-X-CUE-OUT']('30');
+      parser['EXT-X-ASSET']('CAID=0x0000000020FB6501');
+      parser.EXTINF('4.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('assetdata').should.eql('CAID=0x0000000020FB6501');
+    });
+  });
 });
 
 function getParser() {
