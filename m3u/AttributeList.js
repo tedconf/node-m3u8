@@ -25,7 +25,8 @@ var dataTypes = AttributeList.dataTypes = {
   'cueout'     : 'decimal-integer',
   'cuein'      : 'boolean',
   'cont-offset': 'decimal-floating-point',
-  'cont-dur'   : 'decimal-integer'
+  'cont-dur'   : 'decimal-integer',
+  'assetdata'  : 'quoted-string'
 };
 
 AttributeList.prototype.mergeAttributes = function mergeAttributes(attributes) {
