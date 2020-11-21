@@ -26,7 +26,8 @@ var dataTypes = AttributeList.dataTypes = {
   'cuein'      : 'boolean',
   'cont-offset': 'decimal-floating-point',
   'cont-dur'   : 'decimal-integer',
-  'assetdata'  : 'quoted-string'
+  'assetdata'  : 'quoted-string',
+  'daterange'  : 'quoted-string-array'
 };
 
 AttributeList.prototype.mergeAttributes = function mergeAttributes(attributes) {
@@ -91,6 +92,13 @@ var coerce = {
   'quoted-string': function coerceQuotedString(value) {
     return '"' + value.replace(/"/g, '\\"') + '"';
   },
+  'quoted-string-array': function coerceQuotedStringArray(value) {
+    var s = value.map(function(v) {
+      var key = Object.keys(v)[0];
+      return key + "=" + `"${v[key]}"`;
+    }).join(',');
+    return s;
+  },
   'unknown': function coerceUnknown(value) {
     return value;
   }
@@ -121,6 +129,21 @@ var parse = {
     } else {
       return value;
     }
+  },
+  'quoted-string-array': function parseQuotedStringArray(value) {
+    var data = {};
+    value.split(',').map(function(kv) {
+      var s = kv.split('=');
+      var obj = {};
+      var unquoted = "";
+      if (s[1].indexOf('"') === 0 && s[1].lastIndexOf('"') == s[1].length - 1) {
+        unquoted = s[1].slice(1, -1);
+      } else {
+        unquoted = s[1];
+      }
+      data[s[0]] = unquoted;
+    });
+    return data;
   },
   'unknown': function parseUnknown(value, key) {
     console.error('Handling value:', value, ' for unknown key:', key);

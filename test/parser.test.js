@@ -152,6 +152,18 @@ describe('parser', function() {
 
   });
 
+  describe('#EXT-X-DATERANGE', function() {
+    it('should handle a set of attributes / value pairs for a range of time', function() {
+      var parser = getParser();
+
+      parser['EXT-X-DATERANGE']('START-DATE="2020-11-21T10:00:00.000Z",X-CUSTOM="MY CUSTOM TAG"');
+      parser.EXTINF('4.5,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('daterange')['START-DATE'].should.eql('2020-11-21T10:00:00.000Z');
+      parser.currentItem.toString().should.eql('#EXT-X-DATERANGE:START-DATE="2020-11-21T10:00:00.000Z",X-CUSTOM="MY CUSTOM TAG"\n#EXTINF:4.5000,some title\n');
+    });
+  });
+
   describe('#EXT-X-STREAM-INF', function() {
     it('should create a new Stream item', function() {
       var parser = getParser();

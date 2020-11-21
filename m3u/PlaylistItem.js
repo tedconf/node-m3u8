@@ -39,6 +39,13 @@ PlaylistItem.prototype.toString = function toString() {
   if (this.get('daiPlacementOpportunity')) {
     output.push('#EXT-X-PLACEMENT-OPPORTUNITY');
   }
+  if (this.get('daterange') != null) {
+    var attr = this.get('daterange');
+    var s = Object.keys(attr).map(function(key) {
+      return key + "=" + `"${attr[key]}"`;
+    }).join(',');
+    output.push('#EXT-X-DATERANGE:' + s);
+  }
   if (this.get('duration') != null || this.get('title') != null) {
     output.push(
       '#EXTINF:' + [this.get('duration').toFixed(4), this.get('title')].join(',')

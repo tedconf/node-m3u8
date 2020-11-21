@@ -1,6 +1,6 @@
 {
     "name": "@eyevinn/m3u8",
-    "version": "0.1.2",
+    "version": "0.2.0",
     "description": "streaming m3u8 parser for Apple's HTTP Live Streaming protocol",
     "main": "./parser.js",
     "keywords": [
