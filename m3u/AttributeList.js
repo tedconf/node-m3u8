@@ -134,14 +134,15 @@ var parse = {
     var data = {};
     value.split(',').map(function(kv) {
       var s = kv.split('=');
-      var obj = {};
       var unquoted = "";
-      if (s[1].indexOf('"') === 0 && s[1].lastIndexOf('"') == s[1].length - 1) {
-        unquoted = s[1].slice(1, -1);
-      } else {
-        unquoted = s[1];
+      if (s[1]) {
+        if (s[1].indexOf('"') === 0 && s[1].lastIndexOf('"') == s[1].length - 1) {
+          unquoted = s[1].slice(1, -1);
+        } else {
+          unquoted = s[1];
+        }
+        data[s[0]] = unquoted;
       }
-      data[s[0]] = unquoted;
     });
     return data;
   },
