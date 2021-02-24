@@ -15,7 +15,7 @@
         "url": "http://github.com/Eyevinn/node-m3u8.git"
     },
     "dependencies": {
-        "chunked-stream": "~0.0.1"
+        "chunked-stream": "~0.0.2"
     },
     "devDependencies": {
         "mocha": "~7.1.0",
