@@ -35,6 +35,7 @@ describe('parsing variant m3u8', function() {
         item.get('resolution')[1].should.equal(180);
         item.get('audio').should.equal('600k');
         item.get('frame-rate').should.equal(29.97);
+        item.get('closed-captions').should.equal("NONE");
         done();
       });
     });
@@ -67,6 +68,7 @@ describe('parsing variant m3u8', function() {
         item.get('default').should.be.true;
         item.get('uri').should.equal('hls_600k_audio.m3u8');
         item.get('type').should.equal('AUDIO');
+        item.get('channels').should.equal("2");
 
         done();
       });

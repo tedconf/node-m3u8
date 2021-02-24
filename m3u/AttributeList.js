@@ -28,7 +28,9 @@ var dataTypes = AttributeList.dataTypes = {
   'cont-offset': 'decimal-floating-point',
   'cont-dur'   : 'decimal-integer',
   'assetdata'  : 'quoted-string',
-  'daterange'  : 'quoted-string-array'
+  'daterange'  : 'quoted-string-array',
+  'channels'   : 'quoted-string',
+  'closed-captions': 'quoted-string',
 };
 
 AttributeList.prototype.mergeAttributes = function mergeAttributes(attributes) {
