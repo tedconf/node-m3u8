@@ -12,6 +12,7 @@ var dataTypes = AttributeList.dataTypes = {
   'default'    : 'boolean',
   'duration'   : 'decimal-floating-point',
   'forced'     : 'boolean',
+  'frame-rate' : 'decimal-floating-point',
   'group-id'   : 'quoted-string',
   'language'   : 'quoted-string',
   'name'       : 'quoted-string',

@@ -34,7 +34,7 @@ describe('parsing variant m3u8', function() {
         item.get('resolution')[0].should.equal(320);
         item.get('resolution')[1].should.equal(180);
         item.get('audio').should.equal('600k');
-
+        item.get('frame-rate').should.equal(29.97);
         done();
       });
     });
