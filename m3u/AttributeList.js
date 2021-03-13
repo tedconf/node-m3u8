@@ -18,6 +18,7 @@ var dataTypes = AttributeList.dataTypes = {
   'name'       : 'quoted-string',
   'program-id' : 'decimal-integer',
   'resolution' : 'decimal-resolution',
+  'sctedata'   : 'enumerated-string',
   'subtitles'  : 'quoted-string',
   'title'      : 'enumerated-string',
   'type'       : 'enumerated-string',

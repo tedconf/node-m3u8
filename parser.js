@@ -18,6 +18,7 @@ var m3uParser = module.exports = function m3uParser() {
   this.cueOut = null;
   this.cueOutCont = null;
   this.assetData = null;
+  this.scteData = null;
   this.dateRangeData = null;
 
   this.on('data', this.parse.bind(this));
@@ -93,11 +94,18 @@ m3uParser.prototype['EXTINF'] = function parseInf(data) {
       this.currentItem.set('assetdata', this.assetData);
       this.assetData = null;
     }
+    if (this.scteData !== null) {
+      this.currentItem.set('sctedata', this.scteData);
+      this.scteData = null;
+    }
   }
 
   if (this.cueOutCont !== null) {
     this.currentItem.set('cont-offset', this.cueOutCont.offset);
     this.currentItem.set('cont-dur', this.cueOutCont.duration);
+    if (this.cueOutCont.scteData) {
+      this.currentItem.set('sctedata', this.cueOutCont.scteData);
+    }
     this.cueOutCont = null;
   }
 
@@ -123,12 +131,35 @@ m3uParser.prototype['EXT-X-CUE-OUT'] = function parseInf(data) {
 }
 
 m3uParser.prototype['EXT-X-CUE-OUT-CONT'] = function parseInf(data) {
-  const m = data.match(/(.+)\/(.+)/);
+  const m = data.match(/(\d+\.?\d*)\/(\d+\.?\d*)/);
   if (m) {
     const offset = m[1];
     const duration = m[2];
     this.cueOutCont = { offset: Number(offset), duration: Number(duration) };
   }
+  else {
+    const cueOutInfo = { offset: false, duration: false }
+    for (const match of data.matchAll(/(ElapsedTime|Duration|SCTE35)=([^,]*)/g)) {
+      switch(match[1]) {
+        case 'ElapsedTime':
+          cueOutInfo.offset = Number(match[2]);
+          break;
+        case 'Duration':
+          cueOutInfo.duration = Number(match[2]);
+          break;
+        case 'SCTE35':
+          cueOutInfo.scteData = match[2];
+          break;
+      }
+    }
+    if (cueOutInfo.offset !== false && cueOutInfo.duration !== false) {
+      this.cueOutCont = cueOutInfo;
+    }
+  }
+}
+
+m3uParser.prototype['EXT-OATCLS-SCTE35'] = function parseInf(data) {
+  this.scteData = data;
 }
 
 m3uParser.prototype['EXT-X-CUE-IN'] = function parseInf() {
