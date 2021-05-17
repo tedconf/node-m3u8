@@ -140,14 +140,14 @@ describe('parser', function() {
   describe('#EXT-X-CUE-IN', function() {
     it('should indicate cue in is true if present', function() {
       var parser = getParser();
-    
+
       parser.EXTINF('4.5,some title');
       parser['EXT-X-CUE-IN']();
       parser.currentItem.constructor.name.should.eql('PlaylistItem');
-      parser.currentItem.get('cuein').should.eql(true);
+      should.not.exist(parser.currentItem.get('cuein'));
       parser.EXTINF('3.5,some title');
       parser.currentItem.constructor.name.should.eql('PlaylistItem');
-      should.not.exist(parser.currentItem.get('cuein'));
+      parser.currentItem.get('cuein').should.eql(true);
     });
 
   });
@@ -160,7 +160,7 @@ describe('parser', function() {
       parser.EXTINF('4.5,some title');
       parser.currentItem.constructor.name.should.eql('PlaylistItem');
       parser.currentItem.get('daterange')['START-DATE'].should.eql('2020-11-21T10:00:00.000Z');
-      parser.currentItem.toString().should.eql('#EXT-X-DATERANGE:START-DATE="2020-11-21T10:00:00.000Z",X-CUSTOM="MY CUSTOM TAG"\n#EXTINF:4.5000,some title\n');
+      parser.currentItem.toString().should.eql('#EXT-X-DATERANGE:START-DATE="2020-11-21T10:00:00.000Z",X-CUSTOM="MY CUSTOM TAG"\n#EXTINF:4.5000,some title');
     });
   });
 

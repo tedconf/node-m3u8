@@ -71,24 +71,24 @@ describe('parsing playlist m3u8', function() {
     });
   });
 
-  describe('13th PlaylistItem', function() {
+  describe('14th PlaylistItem', function() {
     it('has a cue in', function(done) {
       var parser = getParser();
 
       parser.on('m3u', function(m3u) {
-        var item = m3u.items.PlaylistItem[12];
+        var item = m3u.items.PlaylistItem[13];
         item.get('cuein').should.equal(true);
         done();
       });
     });
   });
 
-  describe('14th PlaylistItem', function() {
+  describe('15th PlaylistItem', function() {
     it('has not a cue in', function(done) {
       var parser = getParser();
 
       parser.on('m3u', function(m3u) {
-        var item = m3u.items.PlaylistItem[13];
+        var item = m3u.items.PlaylistItem[14];
         should.not.exist(item.get('cuein'));
         done();
       });
@@ -100,7 +100,7 @@ describe('parsing playlist m3u8', function() {
       var parser = getParser();
 
       parser.on('m3u', function(m3u) {
-        var item = m3u.items.PlaylistItem[16];
+        var item = m3u.items.PlaylistItem[17];
         item.get('cuein').should.equal(true);
         done();
       });

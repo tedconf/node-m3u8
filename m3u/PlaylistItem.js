@@ -54,7 +54,9 @@ PlaylistItem.prototype.toString = function toString() {
   if (this.get('byteRange') != null) {
     output.push('#EXT-X-BYTERANGE:' + this.get('byteRange'));
   }
-  output.push(this.get('uri'));
+  if(this.get('uri')) {
+    output.push(this.get('uri'));
+  }
 
   return output.join('\n');
 };
