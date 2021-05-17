@@ -22,6 +22,14 @@ describe('parsing variant m3u8', function() {
     });
   });
 
+  it('should have non-undefined comment', function(done) {
+    var parser = getParser();
+    parser.on('m3u', function(m3u) {
+      m3u.toString().split('\n')[2].should.equal('#this is a comment');
+      done();
+    });
+  });
+
   describe('first StreamItem', function() {
     it('should match first stream item in fixture', function(done) {
       var parser = getParser();

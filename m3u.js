@@ -96,7 +96,7 @@ M3U.prototype.toString = function toString() {
     var tagKey = propertyMap.findByKey(key);
     var tag = tagKey ? tagKey.tag : key;
 
-    if (dataTypes[key] == 'boolean') {
+    if (dataTypes[key] == 'boolean' || self.get(key) == null) {
       output.push('#' + tag);
     } else {
       output.push('#' + tag + ':' + self.get(key));
