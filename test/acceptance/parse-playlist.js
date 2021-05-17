@@ -22,6 +22,7 @@ describe('parsing playlist m3u8', function() {
       m3u.get('targetDuration').should.equal(10);
       m3u.get('playlistType').should.equal('VOD');
       m3u.get('mediaSequence').should.equal(0);
+      m3u.get('discontinuitySequence').should.equal(3);
       should.not.exist(m3u.get('iframesOnly'));
       done();
     });
@@ -102,7 +103,7 @@ describe('parsing playlist m3u8', function() {
         var item = m3u.items.PlaylistItem[16];
         item.get('cuein').should.equal(true);
         done();
-      });      
+      });
     });
   });
 });

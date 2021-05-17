@@ -168,6 +168,7 @@ var dataTypes = {
   iframesOnly    : 'boolean',
   targetDuration : 'integer',
   mediaSequence  : 'integer',
+  discontinuitySequence  : 'integer',
   version        : 'integer',
   independentSegments : 'boolean'
 };
@@ -176,6 +177,7 @@ var propertyMap = [
   { tag: 'EXT-X-ALLOW-CACHE',    key: 'allowCache' },
   { tag: 'EXT-X-I-FRAMES-ONLY',  key: 'iframesOnly' },
   { tag: 'EXT-X-MEDIA-SEQUENCE', key: 'mediaSequence' },
+  { tag: 'EXT-X-DISCONTINUITY-SEQUENCE', key: 'discontinuitySequence' },
   { tag: 'EXT-X-PLAYLIST-TYPE',  key: 'playlistType' },
   { tag: 'EXT-X-TARGETDURATION', key: 'targetDuration' },
   { tag: 'EXT-X-VERSION',        key: 'version' },
