@@ -28,6 +28,7 @@ describe('parsing variant m3u8', function() {
 
       parser.on('m3u', function(m3u) {
         var item = m3u.items.StreamItem[0];
+        item.get('average-bandwidth').should.equal(69345);
         item.get('bandwidth').should.equal(69334);
         item.get('program-id').should.equal(1);
         item.get('codecs').should.equal('avc1.42c00c');

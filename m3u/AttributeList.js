@@ -6,6 +6,7 @@ var AttributeList = module.exports = function AttributeList(attributes) {
 var dataTypes = AttributeList.dataTypes = {
   'audio'      : 'quoted-string',
   'autoselect' : 'boolean',
+  'average-bandwidth'  : 'decimal-integer',
   'bandwidth'  : 'decimal-integer',
   'byterange'  : 'enumerated-string',
   'codecs'     : 'quoted-string',
