@@ -96,7 +96,7 @@ M3U.prototype.toString = function toString() {
     var tagKey = propertyMap.findByKey(key);
     var tag = tagKey ? tagKey.tag : key;
 
-    if (dataTypes[key] == 'boolean') {
+    if (dataTypes[key] === 'boolean') {
       output.push('#' + tag);
     } else {
       output.push('#' + tag + ':' + self.get(key));
@@ -161,25 +161,32 @@ var coerce = {
   },
   unknown: function coerceUnknown(value) {
     return value;
+  },
+  datetime: function coerceDatetime(value) {
+    return new Date(value);
   }
 };
 
 var dataTypes = {
-  iframesOnly         : 'boolean',
-  independentSegments : 'boolean',
-  targetDuration      : 'integer',
-  mediaSequence       : 'integer',
-  version             : 'integer'
+  iframesOnly           : 'boolean',
+  independentSegments   : 'boolean',
+  targetDuration        : 'integer',
+  mediaSequence         : 'integer',
+  version               : 'integer',
+  discontinuitySequence : 'integer',
+  programDateTime       : 'datetime'
 };
 
 var propertyMap = [
-  { tag: 'EXT-X-ALLOW-CACHE',          key: 'allowCache' },
-  { tag: 'EXT-X-I-FRAMES-ONLY',        key: 'iframesOnly' },
-  { tag: 'EXT-X-INDEPENDENT-SEGMENTS', key: 'independentSegments' },
-  { tag: 'EXT-X-MEDIA-SEQUENCE',       key: 'mediaSequence' },
-  { tag: 'EXT-X-PLAYLIST-TYPE',        key: 'playlistType' },
-  { tag: 'EXT-X-TARGETDURATION',       key: 'targetDuration' },
-  { tag: 'EXT-X-VERSION',              key: 'version' }
+  { tag: 'EXT-X-ALLOW-CACHE',            key: 'allowCache' },
+  { tag: 'EXT-X-I-FRAMES-ONLY',          key: 'iframesOnly' },
+  { tag: 'EXT-X-INDEPENDENT-SEGMENTS',   key: 'independentSegments' },
+  { tag: 'EXT-X-MEDIA-SEQUENCE',         key: 'mediaSequence' },
+  { tag: 'EXT-X-PLAYLIST-TYPE',          key: 'playlistType' },
+  { tag: 'EXT-X-TARGETDURATION',         key: 'targetDuration' },
+  { tag: 'EXT-X-VERSION',                key: 'version' },
+  { tag: 'EXT-X-DISCONTINUITY-SEQUENCE', key: 'discontinuitySequence' },
+  { tag: 'EXT-X-PROGRAM-DATE-TIME',      key: 'programDateTime' }
 ];
 
 propertyMap.findByTag = function findByTag(tag) {
