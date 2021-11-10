@@ -42,7 +42,13 @@ PlaylistItem.prototype.toString = function toString() {
   if (this.get('daterange') != null) {
     var attr = this.get('daterange');
     var s = Object.keys(attr).map(function(key) {
-      return key + "=" + `"${attr[key]}"`;
+      if (attr['CLASS'] === "com.apple.hls.interstitial" && (key === 'X-RESUME-OFFSET' || key === 'X-PLAYOUT-LIMIT')) {
+        // The CLASS=com.apple.hls.interstitial has some daterange attributes
+        // that are not quoted strings
+        return key + "=" + `${attr[key]}`;
+      } else {
+        return key + "=" + `"${attr[key]}"`;
+      }
     }).join(',');
     output.push('#EXT-X-DATERANGE:' + s);
   }
