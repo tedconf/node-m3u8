@@ -46,6 +46,8 @@ PlaylistItem.prototype.toString = function toString() {
         // The CLASS=com.apple.hls.interstitial has some daterange attributes
         // that are not quoted strings
         return key + "=" + `${attr[key]}`;
+      } else if (key === 'DURATION') {
+        return key + "=" + `${attr[key]}`;
       } else {
         return key + "=" + `"${attr[key]}"`;
       }
