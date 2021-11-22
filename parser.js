@@ -21,6 +21,8 @@ var m3uParser = module.exports = function m3uParser() {
   this.assetData = null;
   this.scteData = null;
   this.dateRangeData = null;
+  this.key = null;
+  this.map = null;
 
   this.on('data', this.parse.bind(this));
   var self = this;
@@ -60,6 +62,9 @@ m3uParser.prototype.parse = function parse(line) {
     if (this.currentItem.attributes.uri != undefined) {
       this.addItem(new PlaylistItem);
     }
+    if (this.datetime) {
+      this.currentItem.set('date', this.datetime);
+    }
     this.currentItem.set('uri', line);
     this.emit('item', this.currentItem);
   }
@@ -93,6 +98,10 @@ m3uParser.prototype['EXTINF'] = function parseInf(data) {
     this.currentItem.set('discontinuity', true);
     this.playlistDiscontinuity = false;
   }
+  if (this.datetime) {
+    this.currentItem.set('date', this.datetime);
+    this.datetime = null;
+  }
   if (this.cueOut !== null) {
     this.currentItem.set('cueout', this.cueOut);
     this.cueOut = null;
@@ -124,11 +133,40 @@ m3uParser.prototype['EXTINF'] = function parseInf(data) {
     this.currentItem.set('daterange', this.dateRangeData);
     this.dateRangeData = null;
   }
+
+  if (this.key != null) {
+    this.currentItem.set('key-method', this.key.method);
+    if (this.key.uri) {
+      this.currentItem.set('key-uri', this.key.uri);
+    }
+    if (this.key.iv) {
+      this.currentItem.set('key-iv', this.key.iv);
+    }
+    if (this.key.keyFormat) {
+      this.currentItem.set('key-keyformat', this.key.keyFormat);
+    }
+    if (this.key.keyFormatVersions) {
+      this.currentItem.set('key-keyformatversions', this.key.keyFormatVersions);
+    }
+    this.key = null;
+  }
+
+  if (this.map !== null) {
+    this.currentItem.set('map-uri', this.map.uri);
+    if (this.map.byterange) {
+      this.currentItem.set('map-byterange', this.map.byterange);
+    }
+    this.map = null;
+  }
 };
 
 m3uParser.prototype['EXT-X-DISCONTINUITY'] = function parseInf() {
   this.playlistDiscontinuity = true;
-}
+};
+
+m3uParser.prototype['EXT-X-PROGRAM-DATE-TIME'] = function parseInf(data) {
+  this.datetime = data;
+};
 
 m3uParser.prototype['EXT-X-CUE-OUT'] = function parseInf(data) {
   var attr = this.parseAttributes(data);
@@ -203,7 +241,56 @@ m3uParser.prototype['EXT-X-MEDIA'] = function(data) {
   this.emit('item', this.currentItem);
 };
 
+m3uParser.prototype['EXT-X-KEY'] = function parseInf(data) {
+  this.key = {
+    method: null,
+    uri: null,
+    iv: null,
+    keyFormat: null,
+    keyFormatVersions: null,
+  };
+  var attr = this.parseAttributes(data);
+  var method = attr.find(elem => elem.key.toLowerCase() === 'method');
+  if (method) {
+    this.key.method = method.value;
+  } else {
+    this.key.method = 'none';
+  }
+  if (method.value.toLowerCase() !== 'none' ) {
+    var uri = attr.find(elem => elem.key.toLowerCase() === 'uri');
+    var iv = attr.find(elem => elem.key.toLowerCase() === 'iv');
+    var keyFormat = attr.find(elem => elem.key.toLowerCase() === 'keyformat');
+    var keyFormatVersions = attr.find(elem => elem.key.toLowerCase() === 'keyformatversions');
+    if (uri) {
+      this.key.uri = uri.value;
+    }
+    if (iv) {
+      this.key.iv = iv.value;
+    }
+    if (keyFormat) {
+      this.key.keyFormat = keyFormat.value;
+    }
+    if (keyFormatVersions) {
+      this.key.keyFormatVersions = keyFormatVersions.value;
+    }
+  }
+}
 
+m3uParser.prototype['EXT-X-MAP'] = function parseMap(data) {
+  this.map = {
+    uri: null,
+    byterange: null
+  }
+  var attr = this.parseAttributes(data);
+  var uri = attr.find(elem => elem.key.toLowerCase() === 'uri');
+  if (uri) {
+    this.map.uri = uri.value;
+  } 
+  var byterange = attr.find(elem => elem.key.toLowerCase() === 'byterange');
+  if (byterange) {
+    this.map.byterange = byterange.value;
+  }
+};
 
 m3uParser.prototype.parseAttributes = function parseAttributes(data) {
   data = data.split(NON_QUOTED_COMMA);

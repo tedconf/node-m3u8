@@ -164,6 +164,60 @@ describe('parser', function() {
     });
   });
 
+  describe('#EXT-X-KEY', function() {
+    it('should indicate key with method, and other attributes if present', function() {
+      var parser = getParser();
+      parser['EXT-X-KEY']('METHOD=AES-128,URI="https://mock.mock.com/key",IV=0x2b4420d1f5d6dff30dde825ae7012450,KEYFORMAT="identity",KEYFORMATVERSIONS="5"');
+      parser.EXTINF('10,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('key-method').should.eql('AES-128');
+      parser.currentItem.get('key-uri').should.eql('https://mock.mock.com/key');
+      parser.currentItem.get('key-iv').should.eql('0x2b4420d1f5d6dff30dde825ae7012450');
+      parser.currentItem.get('key-keyformat').should.eql('identity');
+      parser.currentItem.get('key-keyformatversions').should.eql('5');
+    });
+    it('should indicate key with no attributes if method is NONE', function() {
+      var parser = getParser();
+      parser['EXT-X-KEY']('METHOD=NONE,URI="https://mock.mock.com/key",IV=0x2b4420d1f5d6dff30dde825ae7012450,KEYFORMAT="identity",KEYFORMATVERSIONS="5"');
+      parser.EXTINF('10,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('key-method').should.eql('NONE');
+      (parser.currentItem.get('key-uri') === undefined).should.be.true();
+      (parser.currentItem.get('key-iv') === undefined).should.be.true();
+      (parser.currentItem.get('key-keyformat') === undefined).should.be.true();
+      (parser.currentItem.get('key-keyformatversions') === undefined).should.be.true();
+    });
+  });
+
+  describe('#EXT-X-MAP', function() {
+    it('should indicate map with attributes if present', function() {
+      var parser = getParser();
+      parser['EXT-X-MAP']('URI="https://mock.mock.com/map/init.mp4",BYTERANGE="500@0"');
+      parser.EXTINF('10,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('map-uri').should.eql('https://mock.mock.com/map/init.mp4');
+      parser.currentItem.get('map-byterange').should.eql('500@0');
+    });
+    it('should indicate map with only uri attribute if present', function() {
+      var parser = getParser();
+      parser['EXT-X-MAP']('URI="https://mock.mock.com/map/init.mp4"');
+      parser.EXTINF('10,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('map-uri').should.eql('https://mock.mock.com/map/init.mp4');
+      (parser.currentItem.get('map-byterange') === undefined).should.be.true();
+    });
+  });
+
+  describe('#EXT-X-PROGRAM-DATE-TIME', function() {
+    it('should indicate program-date-time with date if present', function() {
+      var parser = getParser();
+      parser['EXT-X-PROGRAM-DATE-TIME']('2021-11-17T23:27:29.000+00:00');
+      parser.EXTINF('10,some title');
+      parser.currentItem.constructor.name.should.eql('PlaylistItem');
+      parser.currentItem.get('date').should.eql('2021-11-17T23:27:29.000+00:00');
+    });
+  });
+
   describe('#EXT-X-STREAM-INF', function() {
     it('should create a new Stream item', function() {
       var parser = getParser();

@@ -4,35 +4,42 @@ var AttributeList = module.exports = function AttributeList(attributes) {
 };
 
 var dataTypes = AttributeList.dataTypes = {
-  'audio'      : 'quoted-string',
-  'autoselect' : 'boolean',
-  'average-bandwidth'  : 'decimal-integer',
-  'bandwidth'  : 'decimal-integer',
-  'byterange'  : 'enumerated-string',
-  'codecs'     : 'quoted-string',
-  'default'    : 'boolean',
-  'duration'   : 'decimal-floating-point',
-  'forced'     : 'boolean',
-  'frame-rate' : 'decimal-floating-point',
-  'group-id'   : 'quoted-string',
-  'language'   : 'quoted-string',
-  'name'       : 'quoted-string',
-  'program-id' : 'decimal-integer',
-  'resolution' : 'decimal-resolution',
-  'sctedata'   : 'enumerated-string',
-  'subtitles'  : 'quoted-string',
-  'title'      : 'enumerated-string',
-  'type'       : 'enumerated-string',
-  'uri'        : 'quoted-string',
-  'video'      : 'quoted-string',
-  'cueout'     : 'decimal-floating-point',
-  'cuein'      : 'boolean',
-  'cont-offset': 'decimal-floating-point',
-  'cont-dur'   : 'decimal-floating-point',
-  'assetdata'  : 'quoted-string',
-  'daterange'  : 'quoted-string-array',
-  'channels'   : 'quoted-string',
-  'closed-captions': 'quoted-string',
+  'audio'                : 'quoted-string',
+  'autoselect'           : 'boolean',
+  'average-bandwidth'    : 'decimal-integer',
+  'bandwidth'            : 'decimal-integer',
+  'byterange'            : 'enumerated-string',
+  'codecs'               : 'quoted-string',
+  'default'              : 'boolean',
+  'duration'             : 'decimal-floating-point',
+  'forced'               : 'boolean',
+  'frame-rate'           : 'decimal-floating-point',
+  'group-id'             : 'quoted-string',
+  'language'             : 'quoted-string',
+  'name'                 : 'quoted-string',
+  'program-id'           : 'decimal-integer',
+  'resolution'           : 'decimal-resolution',
+  'sctedata'             : 'enumerated-string',
+  'subtitles'            : 'quoted-string',
+  'title'                : 'enumerated-string',
+  'type'                 : 'enumerated-string',
+  'uri'                  : 'quoted-string',
+  'video'                : 'quoted-string',
+  'cueout'               : 'decimal-floating-point',
+  'cuein'                : 'boolean',
+  'cont-offset'          : 'decimal-floating-point',
+  'cont-dur'             : 'decimal-floating-point',
+  'assetdata'            : 'quoted-string',
+  'daterange'            : 'quoted-string-array',
+  'channels'             : 'quoted-string',
+  'closed-captions'      : 'quoted-string',
+  'key-method'           : 'enumerated-string',
+  'key-uri'              : 'quoted-string',
+  'key-iv'               : 'hexadecimal-sequence',
+  'key-keyformat'        : 'quoted-string',
+  'key-keyformatversions': 'quoted-string',
+  'map-uri'              : 'quoted-string',
+  'map-byterange'        : 'quoted-string',
 };
 
 AttributeList.prototype.mergeAttributes = function mergeAttributes(attributes) {
@@ -104,6 +111,9 @@ var coerce = {
     }).join(',');
     return s;
   },
+  'hexadecimal-sequence': function coerceHexadecimalSequence(value) {
+      return value.toString('hex');
+  },
   'unknown': function coerceUnknown(value) {
     return value;
   }
@@ -150,6 +160,9 @@ var parse = {
       }
     });
     return data;
+  },
+  'hexadecimal-sequence': function parseHexadecimalSequence(value) {
+    return value;
   },
   'unknown': function parseUnknown(value, key) {
     console.error('Handling value:', value, ' for unknown key:', key);
