@@ -7,6 +7,23 @@ It may work for other m3u files, but I have not tested it for those uses.
 
 Requires Node.js 22 or later.
 
+install
+-------
+
+Published to GitHub Packages as `@tedconf/m3u8`. Point the scope at the
+registry in `.npmrc`, with a token that has `read:packages`:
+
+```
+@tedconf:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+```
+
+```
+npm install m3u8@npm:@tedconf/m3u8@^1.0.0
+```
+
+The alias keeps `require('m3u8')` working.
+
 example
 -------
 
