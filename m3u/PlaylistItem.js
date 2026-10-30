@@ -3,6 +3,8 @@ var util = require('util'),
 
 var PlaylistItem = module.exports = function PlaylistItem() {
   Item.call(this);
+  this.properties.map = null;
+  this.properties.mapByteRange = null;
 };
 
 util.inherits(PlaylistItem, Item);
@@ -13,10 +15,13 @@ PlaylistItem.create = function createPlaylistItem(data) {
   return item;
 };
 
-PlaylistItem.prototype.toString = function toString() {
+PlaylistItem.prototype.toString = function toString(includeMap) {
   var output = [];
   if (this.get('discontinuity')) {
     output.push('#EXT-X-DISCONTINUITY');
+  }
+  if (includeMap !== false && this.get('map') != null) {
+    output.push(this.mapTag());
   }
   if (this.get('date')) {
     var date = this.get('date');
@@ -39,4 +44,12 @@ PlaylistItem.prototype.toString = function toString() {
   output.push(this.get('uri'));
 
   return output.join('\n');
+};
+
+PlaylistItem.prototype.mapTag = function mapTag() {
+  var tag = '#EXT-X-MAP:URI="' + this.get('map') + '"';
+  if (this.get('mapByteRange') != null) {
+    tag += ',BYTERANGE="' + this.get('mapByteRange') + '"';
+  }
+  return tag;
 };

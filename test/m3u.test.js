@@ -150,6 +150,53 @@ describe('m3u', function() {
     });
   });
 
+  describe('EXT-X-MAP', function() {
+    it('should bump version to 6 when merging in segments with a map', function() {
+      var m3u1 = getM3u();
+      m3u1.set('version', 3);
+      m3u1.addPlaylistItem({ duration: 1, uri: 'a.ts' });
+
+      var m3u2 = getM3u();
+      m3u2.addPlaylistItem({ duration: 1, uri: 'b.m4s', map: 'init.mp4' });
+      m3u1.merge(m3u2);
+      m3u1.get('version').should.eql(6);
+    });
+
+    it('should not lower a version above 6 when merging', function() {
+      var m3u1 = getM3u();
+      m3u1.set('version', 7);
+      m3u1.addPlaylistItem({ duration: 1, uri: 'a.m4s', map: 'init.mp4' });
+
+      var m3u2 = getM3u();
+      m3u2.addPlaylistItem({ duration: 1, uri: 'b.m4s', map: 'init.mp4' });
+      m3u1.merge(m3u2);
+      m3u1.get('version').should.eql(7);
+    });
+
+    it('should write at least version 6 when items have a map', function() {
+      var m3u = getM3u();
+      m3u.set('version', 4);
+      m3u.addPlaylistItem({ duration: 1, uri: 'a.m4s', map: 'init.mp4' });
+      m3u.toString().should.containEql('#EXT-X-VERSION:6\n');
+    });
+
+    it('should add version 6 when no version is set and items have a map', function() {
+      var m3u = getM3u();
+      m3u.addPlaylistItem({ duration: 1, uri: 'a.m4s', map: 'init.mp4' });
+      m3u.toString().split('\n').slice(0, 3).should.eql([
+        '#EXTM3U',
+        '#EXT-X-VERSION:6',
+        '#EXT-X-MAP:URI="init.mp4"'
+      ]);
+    });
+
+    it('should not write a version for playlists without a map', function() {
+      var m3u = getM3u();
+      m3u.addPlaylistItem({ duration: 1, uri: 'a.ts' });
+      m3u.toString().should.not.containEql('#EXT-X-VERSION');
+    });
+  });
+
   describe('#serialize', function(done) {
     it('should return an object containing items and properties', function(done) {
       getVariantM3U(function(error, m3u) {

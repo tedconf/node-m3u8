@@ -1,5 +1,6 @@
 var util = require('util'),
-    ChunkedStream = require('chunked-stream'),
+    Writable = require('stream').Writable,
+    StringDecoder = require('string_decoder').StringDecoder,
     M3U = require('./m3u'),
     PlaylistItem = require('./m3u/PlaylistItem'),
     StreamItem = require('./m3u/StreamItem'),
@@ -10,24 +11,38 @@ var util = require('util'),
 var NON_QUOTED_COMMA = /,(?=(?:[^"]|"[^"]*")*$)/;
 
 var m3uParser = module.exports = function m3uParser() {
-  ChunkedStream.apply(this, ['\n', true]);
+  Writable.call(this, { decodeStrings: false });
 
+  this.decoder = new StringDecoder('utf8');
+  this.buffer = '';
   this.linesRead = 0;
   this.m3u = new M3U;
-
-  this.on('data', this.parse.bind(this));
-  var self = this;
-  this.on('end', function() {
-    self.emit('m3u', self.m3u);
-  });
 };
 
-util.inherits(m3uParser, ChunkedStream);
+util.inherits(m3uParser, Writable);
 
 m3uParser.M3U = M3U;
 
 m3uParser.createStream = function() {
   return new m3uParser;
+};
+
+m3uParser.prototype._write = function _write(chunk, encoding, callback) {
+  this.buffer += typeof chunk == 'string' ? chunk : this.decoder.write(chunk);
+  var lines = this.buffer.split('\n');
+  this.buffer = lines.pop();
+  lines.forEach(this.parse, this);
+  callback();
+};
+
+m3uParser.prototype._final = function _final(callback) {
+  var rest = this.buffer + this.decoder.end();
+  this.buffer = '';
+  if (rest) {
+    this.parse(rest);
+  }
+  this.emit('m3u', this.m3u);
+  callback();
 };
 
 m3uParser.prototype.parse = function parse(line) {
@@ -51,7 +66,7 @@ m3uParser.prototype.parse = function parse(line) {
     this.parseLine(line);
   } else {
     if (this.currentItem.attributes.uri != undefined) {
-      this.addItem(new PlaylistItem);
+      this.addPlaylistItem();
     }
     this.currentItem.set('uri', line);
     this.emit('item', this.currentItem);
@@ -76,21 +91,49 @@ m3uParser.prototype.addItem = function addItem(item) {
   return item;
 };
 
+m3uParser.prototype.addPlaylistItem = function addPlaylistItem() {
+  var item = this.addItem(new PlaylistItem);
+  if (this.playlistDiscontinuity) {
+    item.set('discontinuity', true);
+    this.playlistDiscontinuity = false;
+  }
+  if (this.programDateTime) {
+    item.set('date', this.programDateTime);
+    this.programDateTime = null;
+  }
+  if (this.map) {
+    item.set('map', this.map.uri);
+    item.set('mapByteRange', this.map.byteRange);
+  }
+  return item;
+};
+
 m3uParser.prototype['EXTINF'] = function parseInf(data) {
-  this.addItem(new PlaylistItem);
+  this.addPlaylistItem();
 
   data = data.split(',');
   this.currentItem.set('duration', parseFloat(data[0]));
   this.currentItem.set('title', data[1]);
-  if (this.playlistDiscontinuity) {
-    this.currentItem.set('discontinuity', true);
-    this.playlistDiscontinuity = false;
-  }
 };
 
-m3uParser.prototype['EXT-X-DISCONTINUITY'] = function parseInf() {
+m3uParser.prototype['EXT-X-DISCONTINUITY'] = function parseDiscontinuity() {
   this.playlistDiscontinuity = true;
-}
+};
+
+m3uParser.prototype['EXT-X-PROGRAM-DATE-TIME'] = function parseProgramDateTime(data) {
+  this.programDateTime = data;
+};
+
+m3uParser.prototype['EXT-X-MAP'] = function parseMap(data) {
+  var attributes = {};
+  this.parseAttributes(data).forEach(function(attribute) {
+    attributes[attribute.key.toUpperCase()] = unquote(attribute.value);
+  });
+  this.map = {
+    uri       : attributes.URI,
+    byteRange : attributes.BYTERANGE || null
+  };
+};
 
 m3uParser.prototype['EXT-X-BYTERANGE'] = function parseByteRange(data) {
   this.currentItem.set('byteRange', data);
@@ -112,7 +155,6 @@ m3uParser.prototype['EXT-X-MEDIA'] = function(data) {
 
 m3uParser.prototype.parseAttributes = function parseAttributes(data) {
   data = data.split(NON_QUOTED_COMMA);
-  var self = this;
   return data.map(function(attribute) {
     var keyValue = attribute.split(/=(.+)/).map(function(str) {
       return str.trim();
@@ -123,3 +165,10 @@ m3uParser.prototype.parseAttributes = function parseAttributes(data) {
     };
   });
 };
+
+function unquote(value) {
+  if (typeof value == 'string' && /^".*"$/.test(value)) {
+    return value.slice(1, -1);
+  }
+  return value;
+}

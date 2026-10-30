@@ -5,6 +5,8 @@ node-m3u8 is a streaming m3u8 parser tailored for dealing with [Apple's HTTP
 Live Streaming protocol](http://tools.ietf.org/html/draft-pantos-http-live-streaming).
 It may work for other m3u files, but I have not tested it for those uses.
 
+Requires Node.js 22 or later.
+
 example
 -------
 
@@ -43,6 +45,30 @@ m3u.addPlaylistItem({
   duration : 10,
   uri      : 'file'
 });
+```
+
+fMP4 init segments
+------------------
+
+`EXT-X-MAP` is parsed per segment: every `PlaylistItem` after a map carries it
+as `map` (the URI) and `mapByteRange`, until the next `EXT-X-MAP`. `toString()`
+writes the tag before the segment's `EXTINF` (after `EXT-X-DISCONTINUITY`)
+whenever the map changes, and writes at least `EXT-X-VERSION:6` when any segment
+has a map. `merge()` keeps each playlist's maps.
+
+```
+parser.on('item', function(item) {
+  if (item.get('map')) {
+    item.set('map', 'http://example.com/' + item.get('map'));
+  }
+});
+```
+
+tests
+-----
+
+```
+npm test
 ```
 
 See tests for more usage patterns.

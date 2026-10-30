@@ -82,6 +82,71 @@ describe('parser', function() {
     });
   });
 
+  describe('#EXT-X-MAP', function() {
+    it('should set map on following playlist items', function() {
+      var parser = getParser();
+
+      parser['EXT-X-MAP']('URI="init.mp4",BYTERANGE="720@0"');
+      parser.EXTINF('4.5,');
+      parser.currentItem.get('map').should.eql('init.mp4');
+      parser.currentItem.get('mapByteRange').should.eql('720@0');
+      parser.EXTINF('4.5,');
+      parser.currentItem.get('map').should.eql('init.mp4');
+      should.not.exist(parser.m3u.get('EXT-X-MAP'));
+    });
+  });
+
+  describe('#EXT-X-PROGRAM-DATE-TIME', function() {
+    it('should set date on the following playlist item only', function() {
+      var parser = getParser();
+      var programDateTime = '2017-03-23T19:26:41.000+0000';
+
+      parser['EXT-X-PROGRAM-DATE-TIME'](programDateTime);
+      parser.EXTINF('4.5,');
+      parser.currentItem.get('date').should.eql(programDateTime);
+      parser.EXTINF('4.5,');
+      should.not.exist(parser.currentItem.get('date'));
+      should.not.exist(parser.m3u.get('EXT-X-PROGRAM-DATE-TIME'));
+    });
+  });
+
+  describe('#EXT-X-DISCONTINUITY-SEQUENCE', function() {
+    it('should set discontinuitySequence as an integer', function() {
+      var parser = getParser();
+
+      parser.parseLine('#EXT-X-DISCONTINUITY-SEQUENCE:3');
+      parser.m3u.get('discontinuitySequence').should.eql(3);
+      parser.m3u.toString().should.containEql('#EXT-X-DISCONTINUITY-SEQUENCE:3\n');
+    });
+  });
+
+  describe('streaming', function() {
+    it('should handle lines and multi-byte characters split across chunks', function(done) {
+      var parser = getParser();
+      var body = Buffer.from('#EXTM3U\n#EXTINF:10,caf\u00e9\nseg.ts');
+
+      parser.on('m3u', function(m3u) {
+        m3u.items.PlaylistItem[0].get('title').should.eql('caf\u00e9');
+        m3u.items.PlaylistItem[0].get('uri').should.eql('seg.ts');
+        done();
+      });
+      for (var i = 0; i < body.length; i += 5) {
+        parser.write(body.subarray(i, i + 5));
+      }
+      parser.end();
+    });
+
+    it('should accept CRLF line endings', function(done) {
+      var parser = getParser();
+
+      parser.on('m3u', function(m3u) {
+        m3u.items.PlaylistItem[0].get('uri').should.eql('seg.ts');
+        done();
+      });
+      parser.end('#EXTM3U\r\n#EXTINF:10,\r\nseg.ts\r\n');
+    });
+  });
+
   describe('#EXT-X-STREAM-INF', function() {
     it('should create a new Stream item', function() {
       var parser = getParser();

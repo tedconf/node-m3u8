@@ -1,5 +1,6 @@
 var AttributeList = require('../m3u/AttributeList'),
     Item   = require('../m3u/Item'),
+    PlaylistItem = require('../m3u/PlaylistItem'),
     sinon  = require('sinon'),
     should = require('should');
 
@@ -67,8 +68,19 @@ describe('Item', function() {
       };
       var item = Item.unserialize(Item, data);
       item.attributes.should.eql(list);
-      item.properties.should.eql(data.properties);
+      item.properties.url.should.eql('/path');
       item.should.be.instanceof(Item);
+    });
+
+    it('should keep default properties missing from the serialized data', function() {
+      var item = Item.unserialize(PlaylistItem, {
+        attributes: {},
+        properties: { uri: '/path' }
+      });
+      item.propertiesHasKey('map').should.be.true;
+      item.set('map', 'init.mp4');
+      item.get('map').should.eql('init.mp4');
+      item.attributes.serialize().should.eql({});
     });
   });
 });
