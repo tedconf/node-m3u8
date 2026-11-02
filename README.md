@@ -235,7 +235,7 @@ https://cdn.example.com/talk/segment-1.m4s
 
 | Tag | Stored as |
 |-----|-----------|
-| `EXTINF`, `EXT-X-BYTERANGE`, `EXT-X-DISCONTINUITY`, `EXT-X-PROGRAM-DATE-TIME`, `EXT-X-MAP` | `PlaylistItem` properties |
+| `EXTINF`, `EXT-X-BYTERANGE`, `EXT-X-DISCONTINUITY`, `EXT-X-PROGRAM-DATE-TIME`, `EXT-X-MAP`, `EXT-X-KEY` | `PlaylistItem` properties. `keys` is an array of the raw attribute lists of the `EXT-X-KEY` tags in effect for the segment. |
 | `EXT-X-STREAM-INF` | `StreamItem` |
 | `EXT-X-I-FRAME-STREAM-INF` | `IframeStreamItem` |
 | `EXT-X-MEDIA` | `MediaItem` |
@@ -249,9 +249,9 @@ Known limitations:
 - **Unknown tags are playlist-level.** Any tag not listed above is stored as
   a playlist property and written back in the header. Only its last value is
   kept, and it is not tied to a segment. This affects segment-level tags such
-  as `EXT-X-KEY`, `EXT-X-CUE-OUT`/`EXT-X-CUE-IN`, `EXT-X-DATERANGE` and
-  `EXT-X-GAP`. Don't round-trip encrypted playlists or playlists with
-  per-segment ad markers through this library.
+  as `EXT-X-CUE-OUT`/`EXT-X-CUE-IN`, `EXT-X-DATERANGE` and `EXT-X-GAP`.
+  Don't round-trip playlists with per-segment ad markers through this
+  library.
 - **Don't mix TS and fMP4 in one playlist.** HLS has no tag that clears an
   init segment. If a segment without a map follows one with a map, players
   apply the earlier map to it. So merge a CMAF intro only with a CMAF talk,
@@ -277,6 +277,12 @@ Known limitations:
 - `EXTINF` titles keep their commas. 0.0.10 cut them at the first comma.
 - A URI line that follows another URI line starts a new segment. 0.0.10
   overwrote the previous segment's URI.
+- `EXT-X-KEY` is parsed per segment into `keys`, and written before the
+  first segment and wherever it changes. It is no longer a playlist header
+  property, so key rotation round-trips. `merge()` writes
+  `#EXT-X-KEY:METHOD=NONE` when an unencrypted playlist follows an
+  encrypted one.
+- Empty input and `#EXTINF:Infinity` are parse errors.
 - The `m3u` event fires on the tick after `end()`, not synchronously inside
   it.
 - `EXT-X-PROGRAM-DATE-TIME` sets `date` on the next segment. It is no longer
@@ -297,8 +303,8 @@ only calls them needs no changes beyond the install.
 
 On every playlist TED serves today (TS master, media and iframe playlists,
 and merged intro + talk playlists), the output is byte-for-byte the same as
-0.0.10. None of them carry `EXT-X-PROGRAM-DATE-TIME`; a playlist that does
-will differ, because the tag now moves to its segment.
+0.0.10. None of them carry `EXT-X-PROGRAM-DATE-TIME` or `EXT-X-KEY`; a playlist that
+does will differ, because those tags now move to their segments.
 
 ## Development
 

@@ -5,6 +5,7 @@ var PlaylistItem = module.exports = function PlaylistItem() {
   Item.call(this);
   this.properties.map = null;
   this.properties.mapByteRange = null;
+  this.properties.keys = null;
 };
 
 util.inherits(PlaylistItem, Item);
@@ -15,13 +16,16 @@ PlaylistItem.create = function createPlaylistItem(data) {
   return item;
 };
 
-PlaylistItem.prototype.toString = function toString(includeMap) {
+PlaylistItem.prototype.toString = function toString(includeMap, includeKeys) {
   var output = [];
   if (this.get('discontinuity')) {
     output.push('#EXT-X-DISCONTINUITY');
   }
   if (includeMap !== false && this.get('map') != null) {
     output.push(this.mapTag());
+  }
+  if (includeKeys !== false) {
+    output.push.apply(output, this.keyTags(includeKeys === true));
   }
   if (this.get('date')) {
     var date = this.get('date');
@@ -44,6 +48,16 @@ PlaylistItem.prototype.toString = function toString(includeMap) {
   output.push(this.get('uri'));
 
   return output.join('\n');
+};
+
+PlaylistItem.prototype.keyTags = function keyTags(clearIfNone) {
+  var keys = this.get('keys');
+  if (keys == null) {
+    return clearIfNone ? ['#EXT-X-KEY:METHOD=NONE'] : [];
+  }
+  return keys.map(function(key) {
+    return '#EXT-X-KEY:' + key;
+  });
 };
 
 PlaylistItem.prototype.mapTag = function mapTag() {

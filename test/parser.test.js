@@ -27,6 +27,51 @@ describe('parser', function() {
     parser.end();
   });
 
+  it('should error on empty input', function(done) {
+    var parser = getParser();
+
+    parser.on('error', function(error) {
+      error.message.should.containEql('Non-valid M3U file');
+      done();
+    });
+    parser.on('m3u', function() { done(new Error('m3u emitted')); });
+    parser.end('');
+  });
+
+  it('should error on an infinite EXTINF duration', function(done) {
+    var parser = getParser();
+
+    parser.on('error', function(error) {
+      error.message.should.eql('EXTINF without a valid duration: Infinity,');
+      done();
+    });
+    parser.end('#EXTM3U\n#EXTINF:Infinity,\nseg.ts\n');
+  });
+
+  it('should accept a negative EXTINF duration', function(done) {
+    var parser = getParser();
+
+    parser.on('m3u', function(m3u) {
+      m3u.items.PlaylistItem[0].get('duration').should.eql(-0.04167);
+      done();
+    });
+    parser.end('#EXTM3U\n#EXTINF:-0.04167,\nseg.ts\n');
+  });
+
+  it('should not crash on Object.prototype names as tags or attributes', function(done) {
+    var parser = getParser();
+    var consoleError = console.error;
+    console.error = function() {};
+
+    parser.on('m3u', function(m3u) {
+      console.error = consoleError;
+      m3u.get('toString').should.eql('x');
+      m3u.items.StreamItem[0].get('constructor').should.eql('1');
+      done();
+    });
+    parser.end('#EXTM3U\n#toString:x\n#EXT-X-STREAM-INF:BANDWIDTH=1,CONSTRUCTOR=1\nv.m3u8\n');
+  });
+
   it('should destroy the source when used with pipeline', function(done) {
     var stream = require('stream');
     var source = stream.Readable.from(['NOT VALID\n', 'more\n', 'lines\n']);
@@ -300,6 +345,34 @@ describe('parser', function() {
         '#EXTM3U\n#EXT-X-BYTERANGE:100@0\n#EXTINF:4,\nmain.ts\n' +
         '#EXTINF:4,\n#EXT-X-BYTERANGE:100@100\nmain.ts\n' +
         '#EXT-X-BYTERANGE:100@200\n#EXTINF:4,\nmain.ts\n'
+      );
+    });
+
+    it('should keep EXT-X-KEY on the segments it applies to', function(done) {
+      var parser = getParser();
+
+      parser.on('m3u', function(m3u) {
+        m3u.items.PlaylistItem.map(function(item) {
+          return item.get('keys');
+        }).should.eql([
+          ['METHOD=AES-128,URI="k1"'],
+          ['METHOD=AES-128,URI="k1"'],
+          ['METHOD=AES-128,URI="k2"', 'METHOD=SAMPLE-AES,URI="k3",KEYFORMAT="x"']
+        ]);
+        m3u.toString().split('\n').filter(function(line) {
+          return line.indexOf('#EXT-X-KEY') == 0 || /\.ts$/.test(line);
+        }).should.eql([
+          '#EXT-X-KEY:METHOD=AES-128,URI="k1"', 'a.ts', 'b.ts',
+          '#EXT-X-KEY:METHOD=AES-128,URI="k2"',
+          '#EXT-X-KEY:METHOD=SAMPLE-AES,URI="k3",KEYFORMAT="x"', 'c.ts'
+        ]);
+        should.not.exist(m3u.get('EXT-X-KEY'));
+        done();
+      });
+      parser.end(
+        '#EXTM3U\n#EXT-X-KEY:METHOD=AES-128,URI="k1"\n#EXTINF:4,\na.ts\n#EXTINF:4,\nb.ts\n' +
+        '#EXT-X-KEY:METHOD=AES-128,URI="k2"\n' +
+        '#EXT-X-KEY:METHOD=SAMPLE-AES,URI="k3",KEYFORMAT="x"\n#EXTINF:4,\nc.ts\n'
       );
     });
 

@@ -5,17 +5,19 @@ var util = require('util'),
     PlaylistItem = require('./m3u/PlaylistItem'),
     StreamItem = require('./m3u/StreamItem'),
     IframeStreamItem = require('./m3u/IframeStreamItem'),
-    MediaItem = require('./m3u/MediaItem');
+    MediaItem = require('./m3u/MediaItem'),
+    AttributeList = require('./m3u/AttributeList');
 
 // used for splitting strings by commas not within double quotes
 var NON_QUOTED_COMMA = /,(?=(?:[^"]|"[^"]*")*$)/;
 
 var m3uParser = module.exports = function m3uParser() {
-  Writable.call(this, { decodeStrings: false });
+  Writable.call(this);
 
   this.decoder = new StringDecoder('utf8');
   this.buffer = '';
   this.linesRead = 0;
+  this.pending = {};
   this.m3u = new M3U;
 };
 
@@ -28,7 +30,7 @@ m3uParser.createStream = function() {
 };
 
 m3uParser.prototype._write = function _write(chunk, encoding, callback) {
-  this.buffer += typeof chunk == 'string' ? chunk : this.decoder.write(chunk);
+  this.buffer += this.decoder.write(chunk);
   var lines = this.buffer.split('\n');
   this.buffer = lines.pop();
   try {
@@ -48,6 +50,9 @@ m3uParser.prototype._final = function _final(callback) {
     }
   } catch (error) {
     return callback(error);
+  }
+  if (this.linesRead == 0) {
+    return callback(new Error('Non-valid M3U file. First line: '));
   }
   this.emit('m3u', this.m3u);
   this.emit('end');
@@ -100,23 +105,29 @@ m3uParser.prototype.addItem = function addItem(item) {
 
 m3uParser.prototype.addPlaylistItem = function addPlaylistItem() {
   var item = this.addItem(new PlaylistItem);
-  if (this.playlistDiscontinuity) {
-    item.set('discontinuity', true);
-    this.playlistDiscontinuity = false;
-  }
-  if (this.programDateTime) {
-    item.set('date', this.programDateTime);
-    this.programDateTime = null;
-  }
-  if (this.byteRange) {
-    item.set('byteRange', this.byteRange);
-    this.byteRange = null;
-  }
+  var pending = this.pending;
+  this.pending = {};
+  Object.keys(pending).forEach(function(key) {
+    item.set(key, pending[key]);
+  });
   if (this.map) {
     item.set('map', this.map.uri);
     item.set('mapByteRange', this.map.byteRange);
   }
+  if (this.keys) {
+    item.set('keys', this.keys);
+  }
+  this.keysOpen = false;
   return item;
+};
+
+m3uParser.prototype.setSegmentProperty = function setSegmentProperty(key, value) {
+  var item = this.pendingPlaylistItem();
+  if (item) {
+    item.set(key, value);
+  } else {
+    this.pending[key] = value;
+  }
 };
 
 m3uParser.prototype.pendingPlaylistItem = function pendingPlaylistItem() {
@@ -128,8 +139,8 @@ m3uParser.prototype.pendingPlaylistItem = function pendingPlaylistItem() {
 
 m3uParser.prototype['EXTINF'] = function parseInf(data) {
   var duration = parseFloat(data);
-  if (isNaN(duration)) {
-    throw new Error('EXTINF without a duration');
+  if (!isFinite(duration)) {
+    throw new Error('EXTINF without a valid duration: ' + data);
   }
   this.addPlaylistItem();
 
@@ -139,34 +150,25 @@ m3uParser.prototype['EXTINF'] = function parseInf(data) {
 };
 
 m3uParser.prototype['EXT-X-DISCONTINUITY'] = function parseDiscontinuity() {
-  var item = this.pendingPlaylistItem();
-  if (item) {
-    item.set('discontinuity', true);
-  } else {
-    this.playlistDiscontinuity = true;
-  }
+  this.setSegmentProperty('discontinuity', true);
 };
 
 m3uParser.prototype['EXT-X-PROGRAM-DATE-TIME'] = function parseProgramDateTime(data) {
-  var item = this.pendingPlaylistItem();
-  if (item) {
-    item.set('date', data);
-  } else {
-    this.programDateTime = data;
-  }
+  this.setSegmentProperty('date', data);
+};
+
+m3uParser.prototype['EXT-X-BYTERANGE'] = function parseByteRange(data) {
+  this.setSegmentProperty('byteRange', data);
 };
 
 m3uParser.prototype['EXT-X-MAP'] = function parseMap(data) {
-  var attributes = {};
-  this.parseAttributes(data).forEach(function(attribute) {
-    attributes[attribute.key.toUpperCase()] = unquote(attribute.value);
-  });
-  if (attributes.URI === undefined) {
+  var attributes = new AttributeList(this.parseAttributes(data));
+  if (attributes.get('uri') == null) {
     return;
   }
   this.map = {
-    uri       : attributes.URI,
-    byteRange : attributes.BYTERANGE || null
+    uri       : attributes.get('uri'),
+    byteRange : attributes.get('byterange') || null
   };
   var item = this.pendingPlaylistItem();
   if (item) {
@@ -175,12 +177,15 @@ m3uParser.prototype['EXT-X-MAP'] = function parseMap(data) {
   }
 };
 
-m3uParser.prototype['EXT-X-BYTERANGE'] = function parseByteRange(data) {
+m3uParser.prototype['EXT-X-KEY'] = function parseKey(data) {
+  if (!this.keysOpen) {
+    this.keys = [];
+    this.keysOpen = true;
+  }
+  this.keys.push(data);
   var item = this.pendingPlaylistItem();
   if (item) {
-    item.set('byteRange', data);
-  } else {
-    this.byteRange = data;
+    item.set('keys', this.keys);
   }
 };
 
@@ -213,10 +218,3 @@ m3uParser.prototype.parseAttributes = function parseAttributes(data) {
     };
   });
 };
-
-function unquote(value) {
-  if (typeof value == 'string' && /^".*"$/.test(value)) {
-    return value.slice(1, -1);
-  }
-  return value;
-}

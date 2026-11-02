@@ -186,6 +186,32 @@ describe('m3u', function() {
     });
   });
 
+  describe('EXT-X-KEY', function() {
+    it('should clear the key when a merged playlist is unencrypted', function() {
+      var m3u1 = getM3u();
+      m3u1.addPlaylistItem({ duration: 1, uri: 'a.ts', keys: ['METHOD=AES-128,URI="k"'] });
+      var m3u2 = getM3u();
+      m3u2.addPlaylistItem({ duration: 1, uri: 'b.ts' });
+      m3u1.merge(m3u2);
+      m3u1.toString().split('\n').filter(function(line) {
+        return line.indexOf('#EXT-X-KEY') == 0 || /\.ts$/.test(line);
+      }).should.eql([
+        '#EXT-X-KEY:METHOD=AES-128,URI="k"', 'a.ts', '#EXT-X-KEY:METHOD=NONE', 'b.ts'
+      ]);
+    });
+  });
+
+  describe('EXT-X-VERSION with a null value', function() {
+    it('should write the version once', function() {
+      var m3u = getM3u();
+      m3u.properties.version = null;
+      m3u.addPlaylistItem({ duration: 1, uri: 'a.m4s', map: 'init.mp4' });
+      m3u.toString().split('\n').filter(function(line) {
+        return line.indexOf('#EXT-X-VERSION') == 0;
+      }).should.eql(['#EXT-X-VERSION:6']);
+    });
+  });
+
   describe('EXT-X-MAP', function() {
     function mapLines(m3u) {
       return m3u.toString().split('\n').filter(function(line) {

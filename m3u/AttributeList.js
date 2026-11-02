@@ -10,7 +10,7 @@ var dataTypes = AttributeList.dataTypes = {
   'autoselect'         : 'boolean',
   'average-bandwidth'  : 'decimal-integer',
   'bandwidth'          : 'decimal-integer',
-  'byterange'          : 'enumerated-string',
+  'byterange'          : 'quoted-string',
   'channels'           : 'quoted-string',
   'characteristics'    : 'quoted-string',
   'codecs'             : 'quoted-string',
@@ -38,6 +38,10 @@ var dataTypes = AttributeList.dataTypes = {
   'video-range'        : 'enumerated-string'
 };
 
+function typeOf(key) {
+  return Object.prototype.hasOwnProperty.call(dataTypes, key) ? dataTypes[key] : 'unknown';
+}
+
 AttributeList.prototype.mergeAttributes = function mergeAttributes(attributes) {
   var self = this;
   if (Array.isArray(attributes)) {
@@ -55,13 +59,13 @@ AttributeList.prototype.set = function setValue(key, value) {
   key = key.toLowerCase();
   this.attributes[key] = value == null
     ? null
-    : parse[dataTypes[key] || 'unknown'](value, key);
+    : parse[typeOf(key)](value, key);
 
   return this;
 };
 
 AttributeList.prototype.getCoerced = function getCoerced(key) {
-  return coerce[dataTypes[key] || 'unknown'](this.get(key));
+  return coerce[typeOf(key)](this.get(key));
 };
 
 AttributeList.prototype.toString = function toString() {

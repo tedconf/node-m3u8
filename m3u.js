@@ -28,7 +28,7 @@ M3U.prototype.get = function getProperty(key) {
 M3U.prototype.set = function setProperty(key, value) {
   var tagKey = propertyMap.findByTag(key);
   if (tagKey) key = tagKey.key;
-  this.properties[key] = coerce[dataTypes[key] || 'unknown'](value);
+  this.properties[key] = coerce[typeOf(key)](value);
 
   return this;
 };
@@ -107,7 +107,7 @@ M3U.prototype.toString = function toString() {
   var self   = this;
   var output = ['#EXTM3U'];
   var hasMap = this.hasMap();
-  if (hasMap && this.get('version') == null) {
+  if (hasMap && !Object.prototype.hasOwnProperty.call(this.properties, 'version')) {
     output.push('#EXT-X-VERSION:' + MAP_MIN_VERSION);
   }
   Object.keys(this.properties).forEach(function(key) {
@@ -119,7 +119,7 @@ M3U.prototype.toString = function toString() {
       value = MAP_MIN_VERSION;
     }
 
-    if (dataTypes[key] == 'boolean' || value == null) {
+    if (typeOf(key) == 'boolean' || value == null) {
       output.push('#' + tag);
     } else {
       output.push('#' + tag + ':' + value);
@@ -132,8 +132,11 @@ M3U.prototype.toString = function toString() {
       var includeMap = !previous || item.get('discontinuity') ||
         item.get('map') !== previous.get('map') ||
         item.get('mapByteRange') !== previous.get('mapByteRange');
+      var includeKeys = previous
+        ? keysString(item) !== keysString(previous)
+        : item.get('keys') != null;
       previous = item;
-      return item.toString(Boolean(includeMap));
+      return item.toString(Boolean(includeMap), includeKeys);
     }).join('\n'));
 
     if (this.get('playlistType') === 'VOD') {
@@ -174,6 +177,11 @@ M3U.unserialize = function unserialize(object) {
   return m3u;
 };
 
+function keysString(item) {
+  var keys = item.get('keys');
+  return keys ? keys.join('\n') : null;
+}
+
 function itemToString(item) {
   return item.toString();
 }
@@ -202,6 +210,10 @@ var dataTypes = {
   discontinuitySequence : 'integer',
   version               : 'integer'
 };
+
+function typeOf(key) {
+  return Object.prototype.hasOwnProperty.call(dataTypes, key) ? dataTypes[key] : 'unknown';
+}
 
 var propertyMap = [
   { tag: 'EXT-X-ALLOW-CACHE',            key: 'allowCache' },
