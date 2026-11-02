@@ -70,7 +70,10 @@ m3uParser.prototype.parse = function parse(line) {
   }
   switch(['#EXT-X-ENDLIST', ''].indexOf(line)) {
     case 0:
-      this.m3u.set('playlistType', 'VOD');
+      this.m3u.set('endlist', true);
+      if (this.m3u.get('playlistType') == null) {
+        this.m3u.set('playlistType', 'VOD');
+      }
     case 1:
       return true;
   }

@@ -186,6 +186,39 @@ describe('m3u', function() {
     });
   });
 
+  describe('EXT-X-ENDLIST', function() {
+    it('should write ENDLIST when endlist is set without a playlist type', function() {
+      var m3u = getM3u();
+      m3u.set('endlist', true);
+      m3u.addPlaylistItem({ duration: 1, uri: 'a.ts' });
+      m3u.toString().should.eql('#EXTM3U\n#EXTINF:1.0000,\na.ts\n#EXT-X-ENDLIST\n');
+    });
+
+    it('should take endlist from the merged playlist', function() {
+      var ended = getM3u();
+      ended.set('endlist', true);
+      ended.addPlaylistItem({ duration: 1, uri: 'b.ts' });
+      var live = getM3u();
+      live.addPlaylistItem({ duration: 1, uri: 'c.ts' });
+
+      var m3u1 = getM3u();
+      m3u1.addPlaylistItem({ duration: 1, uri: 'a.ts' });
+      m3u1.merge(ended);
+      m3u1.get('endlist').should.be.true();
+      m3u1.merge(live);
+      should.not.exist(m3u1.get('endlist'));
+      m3u1.toString().should.not.containEql('#EXT-X-ENDLIST');
+    });
+
+    it('should survive a serialize round trip', function() {
+      var m3u = getM3u();
+      m3u.set('endlist', true);
+      m3u.addPlaylistItem({ duration: 1, uri: 'a.ts' });
+      var copy = M3U.unserialize(JSON.parse(JSON.stringify(m3u.serialize())));
+      copy.toString().should.containEql('#EXT-X-ENDLIST');
+    });
+  });
+
   describe('EXT-X-KEY', function() {
     it('should clear the key when a merged playlist is unencrypted', function() {
       var m3u1 = getM3u();

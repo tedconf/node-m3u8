@@ -127,6 +127,7 @@ tags are stored under a camelCase key. `set()` also accepts the tag name.
 |-------------------------|--------------------------------|---------|
 | `allowCache`            | `EXT-X-ALLOW-CACHE`            | string  |
 | `discontinuitySequence` | `EXT-X-DISCONTINUITY-SEQUENCE` | integer |
+| `endlist`               | `EXT-X-ENDLIST`                | flag, written after the last segment |
 | `iframesOnly`           | `EXT-X-I-FRAMES-ONLY`          | flag    |
 | `independentSegments`   | `EXT-X-INDEPENDENT-SEGMENTS`   | flag    |
 | `mediaSequence`         | `EXT-X-MEDIA-SEQUENCE`         | integer |
@@ -149,7 +150,7 @@ and written back as a bare tag. See [Limitations](#limitations).
 | `removePlaylistItem(index)` | Removes a segment. Throws `RangeError` if the index is out of range. |
 | `totalDuration()` | Sum of segment durations, in seconds. |
 | `domainDurations()` | Durations split at each discontinuity, e.g. `[intro, talk]`. |
-| `merge(other)` | Appends another media playlist's segments. Marks the first appended segment as a discontinuity and keeps the larger `targetDuration`. Raises `version` to 6 if any segment has an init segment. Mutates and returns `this`. |
+| `merge(other)` | Appends another media playlist's segments. Marks the first appended segment as a discontinuity and keeps the larger `targetDuration` and `version`. `endlist` comes from `other`, since its segments end the result. Raises `version` to 6 if any segment has an init segment. Mutates and returns `this`. |
 | `hasMap()` | `true` if any segment has an `EXT-X-MAP` init segment. |
 | `toString()` | Writes the playlist. Media playlists end with `#EXT-X-ENDLIST` when `playlistType` is `VOD`. |
 | `serialize()` | Returns a plain JSON-safe object, e.g. for a cache. |
@@ -274,6 +275,10 @@ Known limitations:
 - `EXT-X-PROGRAM-DATE-TIME`, `EXT-X-MAP` and `EXT-X-DISCONTINUITY` written
   between `EXTINF` and the URI apply to that segment.
 - `merge()` keeps the higher `version` of the two playlists.
+- `EXT-X-ENDLIST` sets the `endlist` flag, and `toString()` writes it when
+  `endlist` is set or `playlistType` is `VOD`. A playlist with no
+  `EXT-X-PLAYLIST-TYPE` still gets `VOD`, as in 0.0.10, but an `EVENT`
+  playlist that ends stays `EVENT` instead of becoming `VOD`.
 - `EXTINF` titles keep their commas. 0.0.10 cut them at the first comma.
 - A URI line that follows another URI line starts a new segment. 0.0.10
   overwrote the previous segment's URI.

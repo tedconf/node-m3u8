@@ -376,6 +376,31 @@ describe('parser', function() {
       );
     });
 
+    it('should keep EVENT and record ENDLIST', function(done) {
+      var parser = getParser();
+
+      parser.on('m3u', function(m3u) {
+        m3u.get('playlistType').should.eql('EVENT');
+        m3u.get('endlist').should.be.true();
+        m3u.toString().should.eql(
+          '#EXTM3U\n#EXT-X-PLAYLIST-TYPE:EVENT\n#EXTINF:4.0000,\na.ts\n#EXT-X-ENDLIST\n'
+        );
+        done();
+      });
+      parser.end('#EXTM3U\n#EXT-X-PLAYLIST-TYPE:EVENT\n#EXTINF:4,\na.ts\n#EXT-X-ENDLIST\n');
+    });
+
+    it('should set VOD for ENDLIST without a playlist type', function(done) {
+      var parser = getParser();
+
+      parser.on('m3u', function(m3u) {
+        m3u.get('playlistType').should.eql('VOD');
+        m3u.get('endlist').should.be.true();
+        done();
+      });
+      parser.end('#EXTM3U\n#EXTINF:4,\na.ts\n#EXT-X-ENDLIST\n');
+    });
+
     it('should keep commas in EXTINF titles', function(done) {
       var parser = getParser();
 

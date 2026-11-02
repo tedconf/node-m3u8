@@ -94,6 +94,11 @@ M3U.prototype.merge = function merge(m3u) {
   if (m3u.get('version') > (this.get('version') || 0)) {
     this.set('version', m3u.get('version'));
   }
+  if (m3u.get('endlist')) {
+    this.set('endlist', true);
+  } else {
+    delete this.properties.endlist;
+  }
   m3u.items.PlaylistItem[0].set('discontinuity', true);
   this.items.PlaylistItem = this.items.PlaylistItem.concat(m3u.items.PlaylistItem);
   if (this.hasMap() && !(this.get('version') >= MAP_MIN_VERSION)) {
@@ -115,6 +120,9 @@ M3U.prototype.toString = function toString() {
     var tag = tagKey ? tagKey.tag : key;
     var value = self.get(key);
 
+    if (key == 'endlist') {
+      return;
+    }
     if (key == 'version' && hasMap && !(value >= MAP_MIN_VERSION)) {
       value = MAP_MIN_VERSION;
     }
@@ -139,7 +147,7 @@ M3U.prototype.toString = function toString() {
       return item.toString(Boolean(includeMap), includeKeys);
     }).join('\n'));
 
-    if (this.get('playlistType') === 'VOD') {
+    if (this.get('endlist') || this.get('playlistType') === 'VOD') {
       output.push('#EXT-X-ENDLIST');
     }
   } else {
@@ -203,6 +211,7 @@ var coerce = {
 };
 
 var dataTypes = {
+  endlist               : 'boolean',
   iframesOnly           : 'boolean',
   independentSegments   : 'boolean',
   targetDuration        : 'integer',
