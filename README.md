@@ -19,7 +19,7 @@ registry in `.npmrc`, with a token that has `read:packages`:
 ```
 
 ```
-npm install m3u8@npm:@tedconf/m3u8@^1.0.0
+npm install m3u8@npm:@tedconf/m3u8@1.0.0-beta.1
 ```
 
 The alias keeps `require('m3u8')` working.

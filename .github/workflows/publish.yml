@@ -37,6 +37,11 @@ jobs:
           scope: '@tedconf'
       - name: Check tag matches package version
         run: test "v$(node -p 'require("./package.json").version')" = "$GITHUB_REF_NAME"
-      - run: npm publish --ignore-scripts
+      - name: Publish
+        run: |
+          case "$GITHUB_REF_NAME" in
+            *-*) npm publish --ignore-scripts --tag next ;;
+            *)   npm publish --ignore-scripts ;;
+          esac
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

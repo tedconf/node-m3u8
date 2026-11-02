@@ -1,42 +1,42 @@
 {
-    "name" : "@tedconf/m3u8",
-    "version" : "1.0.0",
-    "description" : "streaming m3u8 parser for Apple's HTTP Live Streaming protocol",
-    "main" : "./parser.js",
-    "files" : [
+    "name": "@tedconf/m3u8",
+    "version": "1.0.0-beta.1",
+    "description": "streaming m3u8 parser for Apple's HTTP Live Streaming protocol",
+    "main": "./parser.js",
+    "files": [
         "parser.js",
         "m3u.js",
         "m3u/"
     ],
-    "keywords" : [
+    "keywords": [
         "m3u",
         "m3u8",
         "hls",
         "http live streaming",
         "stream"
     ],
-    "repository" : {
-        "type" : "git",
-        "url" : "git+https://github.com/tedconf/node-m3u8.git"
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/tedconf/node-m3u8.git"
     },
-    "license" : "MIT",
-    "publishConfig" : {
-        "registry" : "https://npm.pkg.github.com"
+    "license": "MIT",
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
     },
-    "devDependencies" : {
-        "mocha" : "^12.0.3",
-        "sinon" : "^22.1.0",
-        "should" : "^13.2.3"
+    "devDependencies": {
+        "mocha": "^12.0.3",
+        "sinon": "^22.1.0",
+        "should": "^13.2.3"
     },
-    "engines" : {
-        "node" : ">=22"
+    "engines": {
+        "node": ">=22"
     },
     "scripts": {
-        "test" : "mocha"
+        "test": "mocha"
     },
-    "author" : {
-        "name" : "Mark Bogdanoff",
-        "email" : "bog@ted.com",
-        "url" : "http://www.ted.com"
+    "author": {
+        "name": "Mark Bogdanoff",
+        "email": "bog@ted.com",
+        "url": "http://www.ted.com"
     }
 }
