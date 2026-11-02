@@ -161,6 +161,18 @@ describe('m3u', function() {
       m3u1.get('version').should.eql(7);
     });
 
+    it('should ignore a merged playlist with an invalid version', function() {
+      var m3u1 = getM3u();
+      m3u1.set('version', 3);
+      m3u1.addPlaylistItem({});
+
+      var m3u2 = getM3u();
+      m3u2.set('EXT-X-VERSION', null);
+      m3u2.addPlaylistItem({});
+      m3u1.merge(m3u2);
+      m3u1.get('version').should.eql(3);
+    });
+
     it('should keep a higher version than the merged playlist', function() {
       var m3u1 = getM3u();
       m3u1.set('version', 7);

@@ -91,7 +91,7 @@ M3U.prototype.merge = function merge(m3u) {
   if (m3u.get('targetDuration') > this.get('targetDuration')) {
     this.set('targetDuration', m3u.get('targetDuration'));
   }
-  if (m3u.get('version') != null && !(this.get('version') >= m3u.get('version'))) {
+  if (m3u.get('version') > (this.get('version') || 0)) {
     this.set('version', m3u.get('version'));
   }
   m3u.items.PlaylistItem[0].set('discontinuity', true);

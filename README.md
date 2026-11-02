@@ -98,7 +98,7 @@ LF or CRLF, and multi-byte UTF-8 characters can be split across chunks.
 | `item`  | the item | Once per item. A `PlaylistItem` or `StreamItem` fires when its URI line is read, so its tags are already set. `MediaItem` and `IframeStreamItem` fire when their tag is read. |
 | `m3u`   | `M3U`   | After the input ends. Fires on the tick after `end()`. |
 | `end`   | none    | Right after `m3u`. |
-| `error` | `Error` | Once, when the first line is not `#EXTM3U` or a line can't be parsed (for example a bare `#EXTINF`, or a URI before any tag). The stream is then destroyed and `m3u` does not fire. |
+| `error` | `Error` | Once, when the first line is not `#EXTM3U` or a line can't be parsed (for example an `#EXTINF` without a duration, or a URI before any tag). The stream is then destroyed and `m3u` does not fire. |
 
 ## M3U
 
@@ -269,6 +269,9 @@ Known limitations:
 - `EXT-X-PROGRAM-DATE-TIME`, `EXT-X-MAP` and `EXT-X-DISCONTINUITY` written
   between `EXTINF` and the URI apply to that segment.
 - `merge()` keeps the higher `version` of the two playlists.
+- `EXTINF` titles keep their commas. 0.0.10 cut them at the first comma.
+- A URI line that follows another URI line starts a new segment. 0.0.10
+  overwrote the previous segment's URI.
 - The `m3u` event fires on the tick after `end()`, not synchronously inside
   it.
 - `EXT-X-PROGRAM-DATE-TIME` sets `date` on the next segment. It is no longer

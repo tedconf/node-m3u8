@@ -72,7 +72,7 @@ m3uParser.prototype.parse = function parse(line) {
   if (line.indexOf('#') == 0) {
     this.parseLine(line);
   } else {
-    if (this.currentItem.attributes.uri != undefined) {
+    if (this.currentItem.get('uri') != null) {
       this.addPlaylistItem();
     }
     this.currentItem.set('uri', line);
@@ -123,13 +123,14 @@ m3uParser.prototype.pendingPlaylistItem = function pendingPlaylistItem() {
 };
 
 m3uParser.prototype['EXTINF'] = function parseInf(data) {
-  if (data === undefined) {
+  var duration = parseFloat(data);
+  if (isNaN(duration)) {
     throw new Error('EXTINF without a duration');
   }
   this.addPlaylistItem();
 
-  data = data.split(',');
-  this.currentItem.set('duration', parseFloat(data[0]));
+  data = data.split(/,(.*)/);
+  this.currentItem.set('duration', duration);
   this.currentItem.set('title', data[1]);
 };
 

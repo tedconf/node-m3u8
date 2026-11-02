@@ -52,6 +52,17 @@ describe('parser', function() {
     }).should.not.throw();
   });
 
+  it('should error on an EXTINF with empty data', function(done) {
+    var parser = getParser();
+
+    parser.on('error', function(error) {
+      error.message.should.containEql('EXTINF');
+      done();
+    });
+    parser.on('m3u', function() { done(new Error('m3u emitted')); });
+    parser.end('#EXTM3U\n#EXTINF:\nseg.ts\n');
+  });
+
   it('should error instead of throwing on a URI before any tag', function(done) {
     var parser = getParser();
 
@@ -251,6 +262,29 @@ describe('parser', function() {
         '#EXT-X-PROGRAM-DATE-TIME:2026-01-01T00:00:00Z\n#EXT-X-MAP:URI="a.mp4"\n' +
         'a.m4s\n#EXTINF:4,\nb.m4s\n'
       );
+    });
+
+    it('should start a new segment for a URI line without EXTINF', function(done) {
+      var parser = getParser();
+
+      parser.on('m3u', function(m3u) {
+        m3u.items.PlaylistItem.map(function(item) {
+          return item.get('uri');
+        }).should.eql(['a.ts', 'b.ts']);
+        done();
+      });
+      parser.end('#EXTM3U\n#EXTINF:4,\na.ts\nb.ts\n');
+    });
+
+    it('should keep commas in EXTINF titles', function(done) {
+      var parser = getParser();
+
+      parser.on('m3u', function(m3u) {
+        m3u.items.PlaylistItem[0].get('title').should.eql('Hello, World');
+        m3u.toString().should.containEql('#EXTINF:4.0000,Hello, World\n');
+        done();
+      });
+      parser.end('#EXTM3U\n#EXTINF:4,Hello, World\na.ts\n');
     });
 
     it('should accept CRLF line endings', function(done) {
