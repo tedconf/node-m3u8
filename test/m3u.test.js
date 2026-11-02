@@ -148,6 +148,30 @@ describe('m3u', function() {
       m3u1.merge(m3u2);
       m3u1.get('targetDuration').should.eql(11);
     });
+
+    it('should use the largest version', function() {
+      var m3u1 = getM3u();
+      m3u1.set('version', 6);
+      m3u1.addPlaylistItem({ duration: 1, uri: 'a.m4s', map: 'a.mp4' });
+
+      var m3u2 = getM3u();
+      m3u2.set('version', 7);
+      m3u2.addPlaylistItem({ duration: 1, uri: 'b.m4s', map: 'b.mp4' });
+      m3u1.merge(m3u2);
+      m3u1.get('version').should.eql(7);
+    });
+
+    it('should keep a higher version than the merged playlist', function() {
+      var m3u1 = getM3u();
+      m3u1.set('version', 7);
+      m3u1.addPlaylistItem({});
+
+      var m3u2 = getM3u();
+      m3u2.set('version', 3);
+      m3u2.addPlaylistItem({});
+      m3u1.merge(m3u2);
+      m3u1.get('version').should.eql(7);
+    });
   });
 
   describe('EXT-X-MAP', function() {

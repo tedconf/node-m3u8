@@ -97,7 +97,8 @@ LF or CRLF, and multi-byte UTF-8 characters can be split across chunks.
 |---------|---------|------|
 | `item`  | the item | Once per item. A `PlaylistItem` or `StreamItem` fires when its URI line is read, so its tags are already set. `MediaItem` and `IframeStreamItem` fire when their tag is read. |
 | `m3u`   | `M3U`   | After the input ends. Fires on the tick after `end()`. |
-| `error` | `Error` | When the first line is not `#EXTM3U`. |
+| `end`   | none    | Right after `m3u`. |
+| `error` | `Error` | Once, when the first line is not `#EXTM3U` or a line can't be parsed (for example a bare `#EXTINF`, or a URI before any tag). The stream is then destroyed and `m3u` does not fire. |
 
 ## M3U
 
@@ -261,7 +262,13 @@ Known limitations:
 - Unknown tags with no value, such as `#EXT-X-PLACEMENT-OPPORTUNITY`, are
   written back as bare tags. 0.0.10 wrote them as `#TAG:undefined`.
 - The parser is a `Writable` stream only. It no longer emits a `data` event
-  per line.
+  per line, and can't be piped onward. It still emits `end`.
+- Parse errors emit `error` once and destroy the stream. 0.0.10 emitted
+  `error` for every line after an invalid first line and then still emitted
+  `m3u`, and threw from `write()` on other malformed input.
+- `EXT-X-PROGRAM-DATE-TIME`, `EXT-X-MAP` and `EXT-X-DISCONTINUITY` written
+  between `EXTINF` and the URI apply to that segment.
+- `merge()` keeps the higher `version` of the two playlists.
 - The `m3u` event fires on the tick after `end()`, not synchronously inside
   it.
 - `EXT-X-PROGRAM-DATE-TIME` sets `date` on the next segment. It is no longer

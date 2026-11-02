@@ -31,17 +31,26 @@ m3uParser.prototype._write = function _write(chunk, encoding, callback) {
   this.buffer += typeof chunk == 'string' ? chunk : this.decoder.write(chunk);
   var lines = this.buffer.split('\n');
   this.buffer = lines.pop();
-  lines.forEach(this.parse, this);
+  try {
+    lines.forEach(this.parse, this);
+  } catch (error) {
+    return callback(error);
+  }
   callback();
 };
 
 m3uParser.prototype._final = function _final(callback) {
   var rest = this.buffer + this.decoder.end();
   this.buffer = '';
-  if (rest) {
-    this.parse(rest);
+  try {
+    if (rest) {
+      this.parse(rest);
+    }
+  } catch (error) {
+    return callback(error);
   }
   this.emit('m3u', this.m3u);
+  this.emit('end');
   callback();
 };
 
@@ -49,9 +58,7 @@ m3uParser.prototype.parse = function parse(line) {
   line = line.trim();
   if (this.linesRead == 0) {
     if (line != '#EXTM3U') {
-      return this.emit('error', new Error(
-        'Non-valid M3U file. First line: ' + line
-      ));
+      throw new Error('Non-valid M3U file. First line: ' + line);
     }
     this.linesRead++;
     return true;
@@ -108,7 +115,17 @@ m3uParser.prototype.addPlaylistItem = function addPlaylistItem() {
   return item;
 };
 
+m3uParser.prototype.pendingPlaylistItem = function pendingPlaylistItem() {
+  var item = this.currentItem;
+  if (item instanceof PlaylistItem && item.get('uri') == null) {
+    return item;
+  }
+};
+
 m3uParser.prototype['EXTINF'] = function parseInf(data) {
+  if (data === undefined) {
+    throw new Error('EXTINF without a duration');
+  }
   this.addPlaylistItem();
 
   data = data.split(',');
@@ -117,11 +134,21 @@ m3uParser.prototype['EXTINF'] = function parseInf(data) {
 };
 
 m3uParser.prototype['EXT-X-DISCONTINUITY'] = function parseDiscontinuity() {
-  this.playlistDiscontinuity = true;
+  var item = this.pendingPlaylistItem();
+  if (item) {
+    item.set('discontinuity', true);
+  } else {
+    this.playlistDiscontinuity = true;
+  }
 };
 
 m3uParser.prototype['EXT-X-PROGRAM-DATE-TIME'] = function parseProgramDateTime(data) {
-  this.programDateTime = data;
+  var item = this.pendingPlaylistItem();
+  if (item) {
+    item.set('date', data);
+  } else {
+    this.programDateTime = data;
+  }
 };
 
 m3uParser.prototype['EXT-X-MAP'] = function parseMap(data) {
@@ -136,6 +163,11 @@ m3uParser.prototype['EXT-X-MAP'] = function parseMap(data) {
     uri       : attributes.URI,
     byteRange : attributes.BYTERANGE || null
   };
+  var item = this.pendingPlaylistItem();
+  if (item) {
+    item.set('map', this.map.uri);
+    item.set('mapByteRange', this.map.byteRange);
+  }
 };
 
 m3uParser.prototype['EXT-X-BYTERANGE'] = function parseByteRange(data) {

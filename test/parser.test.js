@@ -13,6 +13,54 @@ describe('parser', function() {
     parser.write('NOT VALID\n');
   });
 
+  it('should error once and not emit m3u for an invalid first line', function(done) {
+    var parser = getParser();
+    var errors = 0;
+
+    parser.on('error', function() { errors++; });
+    parser.on('m3u', function() { done(new Error('m3u emitted')); });
+    parser.on('close', function() {
+      errors.should.eql(1);
+      done();
+    });
+    parser.write('NOT VALID\nstill not\nnope\n');
+    parser.end();
+  });
+
+  it('should emit end after m3u', function(done) {
+    var parser = getParser();
+    var events = [];
+
+    parser.on('m3u', function() { events.push('m3u'); });
+    parser.on('end', function() {
+      events.push('end');
+      events.should.eql(['m3u', 'end']);
+      done();
+    });
+    parser.end('#EXTM3U\n');
+  });
+
+  it('should error instead of throwing on a bare EXTINF', function(done) {
+    var parser = getParser();
+
+    parser.on('error', function(error) {
+      error.message.should.containEql('EXTINF');
+      done();
+    });
+    (function() {
+      parser.end('#EXTM3U\n#EXTINF\nseg.ts\n');
+    }).should.not.throw();
+  });
+
+  it('should error instead of throwing on a URI before any tag', function(done) {
+    var parser = getParser();
+
+    parser.on('error', function() { done(); });
+    (function() {
+      parser.end('#EXTM3U\nseg.ts\n');
+    }).should.not.throw();
+  });
+
   describe('#parseLine', function() {
     it('should call known tags', function() {
       var parser = getParser();
@@ -183,6 +231,26 @@ describe('parser', function() {
         done();
       });
       parser.end('#EXTM3U\n#end:foo\n#write:bar\n');
+    });
+
+    it('should apply tags between EXTINF and the URI to that segment', function(done) {
+      var parser = getParser();
+
+      parser.on('m3u', function(m3u) {
+        var items = m3u.items.PlaylistItem;
+        items[0].get('date').should.eql('2026-01-01T00:00:00Z');
+        items[0].get('map').should.eql('a.mp4');
+        items[0].get('discontinuity').should.be.true();
+        (items[1].get('date') === null).should.be.true();
+        (items[1].get('discontinuity') === null).should.be.true();
+        items[1].get('map').should.eql('a.mp4');
+        done();
+      });
+      parser.end(
+        '#EXTM3U\n#EXTINF:4,\n#EXT-X-DISCONTINUITY\n' +
+        '#EXT-X-PROGRAM-DATE-TIME:2026-01-01T00:00:00Z\n#EXT-X-MAP:URI="a.mp4"\n' +
+        'a.m4s\n#EXTINF:4,\nb.m4s\n'
+      );
     });
 
     it('should accept CRLF line endings', function(done) {
