@@ -138,17 +138,51 @@ describe('parser', function() {
   describe('streaming', function() {
     it('should handle lines and multi-byte characters split across chunks', function(done) {
       var parser = getParser();
-      var body = Buffer.from('#EXTM3U\n#EXTINF:10,caf\u00e9\nseg.ts');
+      var body = Buffer.from('#EXTM3U\n#EXTINF:10,caf\u00e9 \u20ac5\nseg.ts');
 
       parser.on('m3u', function(m3u) {
-        m3u.items.PlaylistItem[0].get('title').should.eql('caf\u00e9');
+        m3u.items.PlaylistItem[0].get('title').should.eql('caf\u00e9 \u20ac5');
         m3u.items.PlaylistItem[0].get('uri').should.eql('seg.ts');
         done();
       });
-      for (var i = 0; i < body.length; i += 5) {
-        parser.write(body.subarray(i, i + 5));
+      for (var i = 0; i < body.length; i += 1) {
+        parser.write(body.subarray(i, i + 1));
       }
       parser.end();
+    });
+
+    it('should ignore an EXT-X-MAP without a URI', function(done) {
+      var parser = getParser();
+
+      parser.on('m3u', function(m3u) {
+        (m3u.items.PlaylistItem[0].get('map') === null).should.be.true();
+        m3u.items.PlaylistItem[0].get('uri').should.eql('seg.ts');
+        done();
+      });
+      parser.end('#EXTM3U\n#EXT-X-MAP\n#EXTINF:10,\nseg.ts\n');
+    });
+
+    it('should not throw on attribute tags without a value', function(done) {
+      var parser = getParser();
+
+      parser.on('m3u', function(m3u) {
+        m3u.items.StreamItem.length.should.eql(1);
+        m3u.items.MediaItem.length.should.eql(1);
+        m3u.items.IframeStreamItem.length.should.eql(1);
+        done();
+      });
+      parser.end('#EXTM3U\n#EXT-X-MEDIA\n#EXT-X-I-FRAME-STREAM-INF\n#EXT-X-STREAM-INF\nv.m3u8\n');
+    });
+
+    it('should not dispatch tags to stream methods', function(done) {
+      var parser = getParser();
+
+      parser.on('m3u', function(m3u) {
+        m3u.get('end').should.eql('foo');
+        m3u.get('write').should.eql('bar');
+        done();
+      });
+      parser.end('#EXTM3U\n#end:foo\n#write:bar\n');
     });
 
     it('should accept CRLF line endings', function(done) {
@@ -189,6 +223,19 @@ describe('parser', function() {
       parser['EXT-X-MEDIA']('NAME="I am a media item!"');
       parser.currentItem.constructor.name.should.eql('MediaItem');
       parser.currentItem.get('name').should.eql('I am a media item!');
+    });
+  });
+
+  describe('attribute types', function() {
+    it('should parse SCORE as a decimal and PATHWAY-ID as a quoted string', function() {
+      var parser = getParser();
+
+      parser['EXT-X-STREAM-INF']('BANDWIDTH=1,SCORE=1.5,PATHWAY-ID="cdn-a"');
+      parser.currentItem.get('score').should.eql(1.5);
+      parser.currentItem.get('pathway-id').should.eql('cdn-a');
+      parser.currentItem.toString().split('\n')[0].should.eql(
+        '#EXT-X-STREAM-INF:BANDWIDTH=1,SCORE=1.5,PATHWAY-ID="cdn-a"'
+      );
     });
   });
 

@@ -12,6 +12,26 @@ describe('AttributeList', function() {
     });
   });
 
+  describe('valueless attributes', function() {
+    it('should not throw and should write them back as bare keys', function() {
+      var list = new AttributeList([
+        { key: 'BANDWIDTH', value: '1' },
+        { key: 'CHARACTERISTICS' }
+      ]);
+
+      list.get('bandwidth').should.eql(1);
+      should.not.exist(list.get('characteristics'));
+      list.toString().should.eql('BANDWIDTH=1,CHARACTERISTICS');
+    });
+
+    it('should keep them through a JSON serialize round trip', function() {
+      var list = new AttributeList([{ key: 'CHARACTERISTICS' }]);
+      var copy = AttributeList.unserialize(JSON.parse(JSON.stringify(list.serialize())));
+
+      copy.toString().should.eql('CHARACTERISTICS');
+    });
+  });
+
   describe('#set', function() {
     it('should set coerce and set attributes', function() {
       var list = createAttributeList();

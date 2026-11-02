@@ -78,7 +78,7 @@ m3uParser.prototype.parseLine = function parseLine(line) {
   var parts = line.slice(1).split(/:(.*)/);
   var tag   = parts[0];
   var data  = parts[1];
-  if (typeof this[tag] == 'function') {
+  if (/^EXT/.test(tag) && typeof this[tag] == 'function') {
     this[tag](data, tag);
   } else {
     this.m3u.set(tag, data === undefined ? null : data);
@@ -129,6 +129,9 @@ m3uParser.prototype['EXT-X-MAP'] = function parseMap(data) {
   this.parseAttributes(data).forEach(function(attribute) {
     attributes[attribute.key.toUpperCase()] = unquote(attribute.value);
   });
+  if (attributes.URI === undefined) {
+    return;
+  }
   this.map = {
     uri       : attributes.URI,
     byteRange : attributes.BYTERANGE || null
@@ -154,6 +157,9 @@ m3uParser.prototype['EXT-X-MEDIA'] = function(data) {
 };
 
 m3uParser.prototype.parseAttributes = function parseAttributes(data) {
+  if (typeof data != 'string') {
+    return [];
+  }
   data = data.split(NON_QUOTED_COMMA);
   return data.map(function(attribute) {
     var keyValue = attribute.split(/=(.+)/).map(function(str) {

@@ -253,8 +253,11 @@ Known limitations:
 
 ## Upgrading from 0.0.10
 
-The public API is the same. These behaviours changed:
+1.0.0 is a breaking release:
 
+- The package is `@tedconf/m3u8` on GitHub Packages, not `m3u8` on npm (see
+  [Install](#install)).
+- It requires Node.js 22 or later.
 - Unknown tags with no value, such as `#EXT-X-PLACEMENT-OPPORTUNITY`, are
   written back as bare tags. 0.0.10 wrote them as `#TAG:undefined`.
 - The parser is a `Writable` stream only. It no longer emits a `data` event
@@ -271,10 +274,16 @@ The public API is the same. These behaviours changed:
   `discontinuitySequence`.
 - `M3U.unserialize` fills in properties missing from older cached data, such
   as `map`.
+- Attributes without a value, such as a bare `CHARACTERISTICS` in
+  `EXT-X-STREAM-INF`, are kept and written back as bare keys.
+
+The module's exports, classes and method names are unchanged, so code that
+only calls them needs no changes beyond the install.
 
 On every playlist TED serves today (TS master, media and iframe playlists,
 and merged intro + talk playlists), the output is byte-for-byte the same as
-0.0.10.
+0.0.10. None of them carry `EXT-X-PROGRAM-DATE-TIME`; a playlist that does
+will differ, because the tag now moves to its segment.
 
 ## Development
 
@@ -289,7 +298,7 @@ Tests use mocha, should and sinon:
 - Fixture-based tests are in `test/acceptance/`.
 - Fixture playlists are in `test/fixtures/`.
 
-CI runs `npm test` on Node 22 and 24 for every pull request and every push
+CI runs `npm test` on Node 22, 24 and 26 for every pull request and every push
 to `main`. Merging to `main` needs passing CI and a review from a code owner.
 
 ## Releasing

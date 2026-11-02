@@ -53,7 +53,9 @@ AttributeList.prototype.get = function getValue(key) {
 
 AttributeList.prototype.set = function setValue(key, value) {
   key = key.toLowerCase();
-  this.attributes[key] = parse[dataTypes[key] || 'unknown'](value, key);
+  this.attributes[key] = value == null
+    ? null
+    : parse[dataTypes[key] || 'unknown'](value, key);
 
   return this;
 };
@@ -65,6 +67,9 @@ AttributeList.prototype.getCoerced = function getCoerced(key) {
 AttributeList.prototype.toString = function toString() {
   var self = this;
   return Object.keys(this.attributes).map(function(key) {
+    if (self.get(key) == null) {
+      return key.toUpperCase();
+    }
     return [key.toUpperCase(), self.getCoerced(key)].join('=');
   }).join(',');
 };

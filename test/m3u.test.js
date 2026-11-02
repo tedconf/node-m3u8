@@ -151,6 +151,45 @@ describe('m3u', function() {
   });
 
   describe('EXT-X-MAP', function() {
+    function mapLines(m3u) {
+      return m3u.toString().split('\n').filter(function(line) {
+        return line.indexOf('#EXT-X-MAP') == 0 || line.indexOf('seg') == 0;
+      });
+    }
+
+    it('should write a map once for consecutive items that share it', function() {
+      var m3u = getM3u();
+      m3u.addPlaylistItem({ duration: 1, uri: 'seg1.m4s', map: 'init.mp4' });
+      m3u.addPlaylistItem({ duration: 1, uri: 'seg2.m4s', map: 'init.mp4' });
+      mapLines(m3u).should.eql(['#EXT-X-MAP:URI="init.mp4"', 'seg1.m4s', 'seg2.m4s']);
+    });
+
+    it('should write a map when the URI changes without a discontinuity', function() {
+      var m3u = getM3u();
+      m3u.addPlaylistItem({ duration: 1, uri: 'seg1.m4s', map: 'a.mp4' });
+      m3u.addPlaylistItem({ duration: 1, uri: 'seg2.m4s', map: 'b.mp4' });
+      mapLines(m3u).should.eql([
+        '#EXT-X-MAP:URI="a.mp4"', 'seg1.m4s', '#EXT-X-MAP:URI="b.mp4"', 'seg2.m4s'
+      ]);
+    });
+
+    it('should write a map when only the byte range changes', function() {
+      var m3u = getM3u();
+      m3u.addPlaylistItem({ duration: 1, uri: 'seg1.m4s', map: 'init.mp4', mapByteRange: '720@0' });
+      m3u.addPlaylistItem({ duration: 1, uri: 'seg2.m4s', map: 'init.mp4', mapByteRange: '720@720' });
+      mapLines(m3u).should.eql([
+        '#EXT-X-MAP:URI="init.mp4",BYTERANGE="720@0"', 'seg1.m4s',
+        '#EXT-X-MAP:URI="init.mp4",BYTERANGE="720@720"', 'seg2.m4s'
+      ]);
+    });
+
+    it('should write a map first seen on a later item', function() {
+      var m3u = getM3u();
+      m3u.addPlaylistItem({ duration: 1, uri: 'seg1.m4s' });
+      m3u.addPlaylistItem({ duration: 1, uri: 'seg2.m4s', map: 'init.mp4' });
+      mapLines(m3u).should.eql(['seg1.m4s', '#EXT-X-MAP:URI="init.mp4"', 'seg2.m4s']);
+    });
+
     it('should bump version to 6 when merging in segments with a map', function() {
       var m3u1 = getM3u();
       m3u1.set('version', 3);
