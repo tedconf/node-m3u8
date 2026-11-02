@@ -116,7 +116,7 @@ M3U.prototype.toString = function toString() {
       value = MAP_MIN_VERSION;
     }
 
-    if (dataTypes[key] == 'boolean') {
+    if (dataTypes[key] == 'boolean' || value == null) {
       output.push('#' + tag);
     } else {
       output.push('#' + tag + ':' + value);

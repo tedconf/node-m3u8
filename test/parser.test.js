@@ -30,6 +30,21 @@ describe('parser', function() {
       parser.m3u.get('THIS-IS-A-TAG').should.eql('some value');
     });
 
+    it('should write unknown tags without a value as bare tags', function() {
+      var parser = getParser();
+
+      parser.parseLine('#EXT-X-PLACEMENT-OPPORTUNITY');
+      parser.m3u.toString().should.eql('#EXTM3U\n#EXT-X-PLACEMENT-OPPORTUNITY\n');
+    });
+
+    it('should keep unknown tags without a value through serialize/unserialize', function() {
+      var parser = getParser();
+
+      parser.parseLine('#EXT-X-PLACEMENT-OPPORTUNITY');
+      var data = JSON.parse(JSON.stringify(parser.m3u.serialize()));
+      m3u8.M3U.unserialize(data).toString().should.eql('#EXTM3U\n#EXT-X-PLACEMENT-OPPORTUNITY\n');
+    });
+
     it('should split on first colon only', function() {
       var parser = getParser();
 

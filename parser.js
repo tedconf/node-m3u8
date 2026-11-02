@@ -81,7 +81,7 @@ m3uParser.prototype.parseLine = function parseLine(line) {
   if (typeof this[tag] == 'function') {
     this[tag](data, tag);
   } else {
-    this.m3u.set(tag, data);
+    this.m3u.set(tag, data === undefined ? null : data);
   }
 };
 

@@ -129,7 +129,8 @@ tags are stored under a camelCase key. `set()` also accepts the tag name.
 | `version`               | `EXT-X-VERSION`                | integer |
 
 Any other tag is stored under its own name, for example
-`m3u.get('EXT-X-START')`. See [Limitations](#limitations).
+`m3u.get('EXT-X-START')`. A tag with no value is stored as `null`
+and written back as a bare tag. See [Limitations](#limitations).
 
 ### Methods
 
@@ -237,7 +238,7 @@ https://cdn.example.com/talk/segment-1.m4s
 
 ## Limitations
 
-These behave the same as in 0.0.10:
+Known limitations:
 
 - **Unknown tags are playlist-level.** Any tag not listed above is stored as
   a playlist property and written back in the header. Only its last value is
@@ -245,10 +246,6 @@ These behave the same as in 0.0.10:
   as `EXT-X-KEY`, `EXT-X-CUE-OUT`/`EXT-X-CUE-IN`, `EXT-X-DATERANGE` and
   `EXT-X-GAP`. Don't round-trip encrypted playlists or playlists with
   per-segment ad markers through this library.
-- **Unknown tags with no value are written badly.** For example,
-  `#EXT-X-PLACEMENT-OPPORTUNITY` in the input comes out as
-  `#EXT-X-PLACEMENT-OPPORTUNITY:undefined`. Use the `daiPlacementOpportunity`
-  segment property instead.
 - **Don't mix TS and fMP4 in one playlist.** HLS has no tag that clears an
   init segment. If a segment without a map follows one with a map, players
   apply the earlier map to it. So merge a CMAF intro only with a CMAF talk,
@@ -258,6 +255,8 @@ These behave the same as in 0.0.10:
 
 The public API is the same. These behaviours changed:
 
+- Unknown tags with no value, such as `#EXT-X-PLACEMENT-OPPORTUNITY`, are
+  written back as bare tags. 0.0.10 wrote them as `#TAG:undefined`.
 - The parser is a `Writable` stream only. It no longer emits a `data` event
   per line.
 - The `m3u` event fires on the tick after `end()`, not synchronously inside
