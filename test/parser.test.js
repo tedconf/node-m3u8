@@ -27,6 +27,17 @@ describe('parser', function() {
     parser.end();
   });
 
+  it('should destroy the source when used with pipeline', function(done) {
+    var stream = require('stream');
+    var source = stream.Readable.from(['NOT VALID\n', 'more\n', 'lines\n']);
+
+    stream.pipeline(source, getParser(), function(error) {
+      error.message.should.containEql('Non-valid M3U file');
+      source.destroyed.should.be.true();
+      done();
+    });
+  });
+
   it('should emit end after m3u', function(done) {
     var parser = getParser();
     var events = [];
@@ -274,6 +285,22 @@ describe('parser', function() {
         done();
       });
       parser.end('#EXTM3U\n#EXTINF:4,\na.ts\nb.ts\n');
+    });
+
+    it('should apply EXT-X-BYTERANGE before or after EXTINF to its segment', function(done) {
+      var parser = getParser();
+
+      parser.on('m3u', function(m3u) {
+        m3u.items.PlaylistItem.map(function(item) {
+          return item.get('byteRange');
+        }).should.eql(['100@0', '100@100', '100@200']);
+        done();
+      });
+      parser.end(
+        '#EXTM3U\n#EXT-X-BYTERANGE:100@0\n#EXTINF:4,\nmain.ts\n' +
+        '#EXTINF:4,\n#EXT-X-BYTERANGE:100@100\nmain.ts\n' +
+        '#EXT-X-BYTERANGE:100@200\n#EXTINF:4,\nmain.ts\n'
+      );
     });
 
     it('should keep commas in EXTINF titles', function(done) {

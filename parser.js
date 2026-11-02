@@ -108,6 +108,10 @@ m3uParser.prototype.addPlaylistItem = function addPlaylistItem() {
     item.set('date', this.programDateTime);
     this.programDateTime = null;
   }
+  if (this.byteRange) {
+    item.set('byteRange', this.byteRange);
+    this.byteRange = null;
+  }
   if (this.map) {
     item.set('map', this.map.uri);
     item.set('mapByteRange', this.map.byteRange);
@@ -172,7 +176,12 @@ m3uParser.prototype['EXT-X-MAP'] = function parseMap(data) {
 };
 
 m3uParser.prototype['EXT-X-BYTERANGE'] = function parseByteRange(data) {
-  this.currentItem.set('byteRange', data);
+  var item = this.pendingPlaylistItem();
+  if (item) {
+    item.set('byteRange', data);
+  } else {
+    this.byteRange = data;
+  }
 };
 
 m3uParser.prototype['EXT-X-STREAM-INF'] = function(data) {

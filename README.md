@@ -100,6 +100,11 @@ LF or CRLF, and multi-byte UTF-8 characters can be split across chunks.
 | `end`   | none    | Right after `m3u`. |
 | `error` | `Error` | Once, when the first line is not `#EXTM3U` or a line can't be parsed (for example an `#EXTINF` without a duration, or a URI before any tag). The stream is then destroyed and `m3u` does not fire. |
 
+Prefer `stream.pipeline(source, parser, callback)` to `source.pipe(parser)`.
+When the parser errors, `pipe()` unpipes and pauses a modern `Readable`
+source, which then never ends (an HTTP response stays open). `pipeline()`
+destroys the source.
+
 ## M3U
 
 `m3u8.M3U` is also available as `require('m3u8').M3U`.
