@@ -4,28 +4,43 @@ var AttributeList = module.exports = function AttributeList(attributes) {
 };
 
 var dataTypes = AttributeList.dataTypes = {
-  'audio'             : 'quoted-string',
-  'autoselect'        : 'boolean',
-  'bandwidth'         : 'decimal-integer',
-  'average-bandwidth' : 'decimal-integer',
-  'frame-rate'        : 'decimal-floating-point',
-  'byterange'         : 'enumerated-string',
-  'channels'          : 'quoted-string',
-  'codecs'            : 'quoted-string',
-  'default'           : 'boolean',
-  'duration'          : 'decimal-floating-point',
-  'forced'            : 'boolean',
-  'group-id'          : 'quoted-string',
-  'language'          : 'quoted-string',
-  'name'              : 'quoted-string',
-  'program-id'        : 'decimal-integer',
-  'resolution'        : 'decimal-resolution',
-  'subtitles'         : 'quoted-string',
-  'title'             : 'enumerated-string',
-  'type'              : 'enumerated-string',
-  'uri'               : 'quoted-string',
-  'video'             : 'quoted-string'
+  'allowed-cpc'        : 'quoted-string',
+  'assoc-language'     : 'quoted-string',
+  'audio'              : 'quoted-string',
+  'autoselect'         : 'boolean',
+  'average-bandwidth'  : 'decimal-integer',
+  'bandwidth'          : 'decimal-integer',
+  'byterange'          : 'quoted-string',
+  'channels'           : 'quoted-string',
+  'characteristics'    : 'quoted-string',
+  'codecs'             : 'quoted-string',
+  'default'            : 'boolean',
+  'duration'           : 'decimal-floating-point',
+  'forced'             : 'boolean',
+  'frame-rate'         : 'decimal-floating-point',
+  'group-id'           : 'quoted-string',
+  'hdcp-level'         : 'enumerated-string',
+  'instream-id'        : 'quoted-string',
+  'language'           : 'quoted-string',
+  'name'               : 'quoted-string',
+  'pathway-id'         : 'quoted-string',
+  'program-id'         : 'decimal-integer',
+  'resolution'         : 'decimal-resolution',
+  'score'              : 'decimal-floating-point',
+  'stable-rendition-id': 'quoted-string',
+  'stable-variant-id'  : 'quoted-string',
+  'subtitles'          : 'quoted-string',
+  'supplemental-codecs': 'quoted-string',
+  'title'              : 'enumerated-string',
+  'type'               : 'enumerated-string',
+  'uri'                : 'quoted-string',
+  'video'              : 'quoted-string',
+  'video-range'        : 'enumerated-string'
 };
+
+function typeOf(key) {
+  return Object.prototype.hasOwnProperty.call(dataTypes, key) ? dataTypes[key] : 'unknown';
+}
 
 AttributeList.prototype.mergeAttributes = function mergeAttributes(attributes) {
   var self = this;
@@ -42,18 +57,23 @@ AttributeList.prototype.get = function getValue(key) {
 
 AttributeList.prototype.set = function setValue(key, value) {
   key = key.toLowerCase();
-  this.attributes[key] = parse[dataTypes[key] || 'unknown'](value, key);
+  this.attributes[key] = value == null
+    ? null
+    : parse[typeOf(key)](value, key);
 
   return this;
 };
 
 AttributeList.prototype.getCoerced = function getCoerced(key) {
-  return coerce[dataTypes[key] || 'unknown'](this.get(key));
+  return coerce[typeOf(key)](this.get(key));
 };
 
 AttributeList.prototype.toString = function toString() {
   var self = this;
   return Object.keys(this.attributes).map(function(key) {
+    if (self.get(key) == null) {
+      return key.toUpperCase();
+    }
     return [key.toUpperCase(), self.getCoerced(key)].join('=');
   }).join(',');
 };

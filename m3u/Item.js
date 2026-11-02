@@ -41,7 +41,9 @@ Item.prototype.serialize = function serialize() {
 Item.unserialize = function unserialize(constructor, object) {
   var item = new constructor;
   item.attributes = AttributeList.unserialize(object.attributes);
-  item.properties = object.properties;
+  Object.keys(object.properties).forEach(function(key) {
+    item.properties[key] = object.properties[key];
+  });
   return item;
 };
 

@@ -15,6 +15,8 @@ M3U.IframeStreamItem = require('./m3u/IframeStreamItem');
 
 var Item = require('./m3u/Item');
 
+var MAP_MIN_VERSION = 6;
+
 M3U.create = function createM3U() {
   return new M3U;
 };
@@ -26,7 +28,7 @@ M3U.prototype.get = function getProperty(key) {
 M3U.prototype.set = function setProperty(key, value) {
   var tagKey = propertyMap.findByTag(key);
   if (tagKey) key = tagKey.key;
-  this.properties[key] = coerce[dataTypes[key] || 'unknown'](value);
+  this.properties[key] = coerce[typeOf(key)](value);
 
   return this;
 };
@@ -79,12 +81,29 @@ M3U.prototype.totalDuration = function totalDuration() {
   }, 0);
 };
 
+M3U.prototype.hasMap = function hasMap() {
+  return this.items.PlaylistItem.some(function(item) {
+    return item.get('map') != null;
+  });
+};
+
 M3U.prototype.merge = function merge(m3u) {
   if (m3u.get('targetDuration') > this.get('targetDuration')) {
     this.set('targetDuration', m3u.get('targetDuration'));
   }
+  if (m3u.get('version') > (this.get('version') || 0)) {
+    this.set('version', m3u.get('version'));
+  }
+  if (m3u.get('endlist')) {
+    this.set('endlist', true);
+  } else {
+    delete this.properties.endlist;
+  }
   m3u.items.PlaylistItem[0].set('discontinuity', true);
   this.items.PlaylistItem = this.items.PlaylistItem.concat(m3u.items.PlaylistItem);
+  if (this.hasMap() && !(this.get('version') >= MAP_MIN_VERSION)) {
+    this.set('version', MAP_MIN_VERSION);
+  }
 
   return this;
 };
@@ -92,21 +111,43 @@ M3U.prototype.merge = function merge(m3u) {
 M3U.prototype.toString = function toString() {
   var self   = this;
   var output = ['#EXTM3U'];
+  var hasMap = this.hasMap();
+  if (hasMap && !Object.prototype.hasOwnProperty.call(this.properties, 'version')) {
+    output.push('#EXT-X-VERSION:' + MAP_MIN_VERSION);
+  }
   Object.keys(this.properties).forEach(function(key) {
     var tagKey = propertyMap.findByKey(key);
     var tag = tagKey ? tagKey.tag : key;
+    var value = self.get(key);
 
-    if (dataTypes[key] == 'boolean') {
+    if (key == 'endlist') {
+      return;
+    }
+    if (key == 'version' && hasMap && !(value >= MAP_MIN_VERSION)) {
+      value = MAP_MIN_VERSION;
+    }
+
+    if (typeOf(key) == 'boolean' || value == null) {
       output.push('#' + tag);
     } else {
-      output.push('#' + tag + ':' + self.get(key));
+      output.push('#' + tag + ':' + value);
     }
   });
 
   if (this.items.PlaylistItem.length) {
-    output.push(this.items.PlaylistItem.map(itemToString).join('\n'));
+    var previous;
+    output.push(this.items.PlaylistItem.map(function(item) {
+      var includeMap = !previous || item.get('discontinuity') ||
+        item.get('map') !== previous.get('map') ||
+        item.get('mapByteRange') !== previous.get('mapByteRange');
+      var includeKeys = previous
+        ? keysString(item) !== keysString(previous)
+        : item.get('keys') != null;
+      previous = item;
+      return item.toString(Boolean(includeMap), includeKeys);
+    }).join('\n'));
 
-    if (this.get('playlistType') === 'VOD') {
+    if (this.get('endlist') || this.get('playlistType') === 'VOD') {
       output.push('#EXT-X-ENDLIST');
     }
   } else {
@@ -144,6 +185,11 @@ M3U.unserialize = function unserialize(object) {
   return m3u;
 };
 
+function keysString(item) {
+  var keys = item.get('keys');
+  return keys ? keys.join('\n') : null;
+}
+
 function itemToString(item) {
   return item.toString();
 }
@@ -165,21 +211,28 @@ var coerce = {
 };
 
 var dataTypes = {
-  iframesOnly         : 'boolean',
-  independentSegments : 'boolean',
-  targetDuration      : 'integer',
-  mediaSequence       : 'integer',
-  version             : 'integer'
+  endlist               : 'boolean',
+  iframesOnly           : 'boolean',
+  independentSegments   : 'boolean',
+  targetDuration        : 'integer',
+  mediaSequence         : 'integer',
+  discontinuitySequence : 'integer',
+  version               : 'integer'
 };
 
+function typeOf(key) {
+  return Object.prototype.hasOwnProperty.call(dataTypes, key) ? dataTypes[key] : 'unknown';
+}
+
 var propertyMap = [
-  { tag: 'EXT-X-ALLOW-CACHE',          key: 'allowCache' },
-  { tag: 'EXT-X-I-FRAMES-ONLY',        key: 'iframesOnly' },
-  { tag: 'EXT-X-INDEPENDENT-SEGMENTS', key: 'independentSegments' },
-  { tag: 'EXT-X-MEDIA-SEQUENCE',       key: 'mediaSequence' },
-  { tag: 'EXT-X-PLAYLIST-TYPE',        key: 'playlistType' },
-  { tag: 'EXT-X-TARGETDURATION',       key: 'targetDuration' },
-  { tag: 'EXT-X-VERSION',              key: 'version' }
+  { tag: 'EXT-X-ALLOW-CACHE',            key: 'allowCache' },
+  { tag: 'EXT-X-DISCONTINUITY-SEQUENCE', key: 'discontinuitySequence' },
+  { tag: 'EXT-X-I-FRAMES-ONLY',          key: 'iframesOnly' },
+  { tag: 'EXT-X-INDEPENDENT-SEGMENTS',   key: 'independentSegments' },
+  { tag: 'EXT-X-MEDIA-SEQUENCE',         key: 'mediaSequence' },
+  { tag: 'EXT-X-PLAYLIST-TYPE',          key: 'playlistType' },
+  { tag: 'EXT-X-TARGETDURATION',         key: 'targetDuration' },
+  { tag: 'EXT-X-VERSION',                key: 'version' }
 ];
 
 propertyMap.findByTag = function findByTag(tag) {

@@ -1,0 +1,4 @@
+spec:
+  - test/*.test.js
+  - test/acceptance/*.js
+reporter: dot

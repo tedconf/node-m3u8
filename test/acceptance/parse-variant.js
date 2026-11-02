@@ -82,3 +82,27 @@ function getParser() {
   variantFile.pipe(parser);
   return parser;
 }
+describe('parsing variant m3u8 with current attributes', function() {
+  it('should not log unknown-key warnings for standard attributes', function(done) {
+    var parser = require('../../parser').createStream();
+    var errors = [];
+    var consoleError = console.error;
+    console.error = function() { errors.push(arguments); };
+    parser.on('m3u', function(m3u) {
+      console.error = consoleError;
+      errors.length.should.eql(0);
+      m3u.items.StreamItem[0].get('video-range').should.eql('PQ');
+      m3u.toString().should.containEql('SUPPLEMENTAL-CODECS="dvh1.08.07/db4h"');
+      done();
+    });
+    parser.end([
+      '#EXTM3U',
+      '#EXT-X-STREAM-INF:BANDWIDTH=1,SCORE=1.5,VIDEO-RANGE=PQ,HDCP-LEVEL=TYPE-0,' +
+        'SUPPLEMENTAL-CODECS="dvh1.08.07/db4h",STABLE-VARIANT-ID="v1",PATHWAY-ID="a",ALLOWED-CPC="x"',
+      'v1.m3u8',
+      '#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="a",NAME="en",ASSOC-LANGUAGE="en",CHARACTERISTICS="public.accessibility.describes-video",STABLE-RENDITION-ID="r1"',
+      '#EXT-X-MEDIA:TYPE=CLOSED-CAPTIONS,GROUP-ID="cc",NAME="cc",INSTREAM-ID="CC1"',
+      ''
+    ].join('\n'));
+  });
+});
