@@ -49,7 +49,7 @@ GitHub Packages needs a token to install packages, even public ones.
 3. Install under the `m3u8` alias:
 
    ```
-   npm install m3u8@npm:@tedconf/m3u8@1.0.0-beta.1
+   npm install m3u8@npm:@tedconf/m3u8@1.0.0
    ```
 
 In GitHub Actions:
