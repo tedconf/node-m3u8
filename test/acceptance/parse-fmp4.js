@@ -3,6 +3,36 @@ var fs     = require('fs'),
     should = require('should');
 
 describe('parsing fMP4 playlist m3u8', function() {
+  [1, 7, 64].forEach(function(chunkSize) {
+    it('should preserve map transitions across ' + chunkSize + '-byte stream chunks and an unterminated final line', function(done) {
+      var parser = require('../../parser').createStream();
+      var input = fs.readFileSync(__dirname + '/../fixtures/fmp4.m3u8', 'utf8')
+        .trimEnd().replace('init-f2-v1.mp4', '初始化.mp4?token=a%2Fb');
+      var bytes = Buffer.from(input);
+      parser.on('error', done);
+      parser.on('m3u', function(m3u) {
+        try {
+          m3u.items.PlaylistItem.map(function(item) {
+            return [item.get('map'), item.get('mapByteRange'), item.get('uri')];
+          }).should.eql([
+            ['init-f1-v1.mp4', null, 'segment-1-f1-v1.m4s'],
+            ['init-f1-v1.mp4', null, 'segment-2-f1-v1.m4s'],
+            ['初始化.mp4?token=a%2Fb', '720@0', 'segment-3-f2-v1.m4s']
+          ]);
+          m3u.items.PlaylistItem[2].get('discontinuity').should.be.true();
+          m3u.get('endlist').should.be.true();
+          var copy = M3U.unserialize(JSON.parse(JSON.stringify(m3u.serialize())));
+          copy.toString().should.eql(m3u.toString());
+          done();
+        } catch (error) { done(error); }
+      });
+      for (var offset = 0; offset < bytes.length; offset += chunkSize) {
+        parser.write(bytes.subarray(offset, offset + chunkSize));
+      }
+      parser.end();
+    });
+  });
+
   it('should not keep EXT-X-MAP as a playlist property', function(done) {
     parse('fmp4.m3u8', function(m3u) {
       should.not.exist(m3u.get('EXT-X-MAP'));
