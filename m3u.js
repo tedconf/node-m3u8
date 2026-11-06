@@ -139,12 +139,14 @@ M3U.prototype.toString = function toString() {
     output.push(this.items.PlaylistItem.map(function(item) {
       var includeMap = !previous || item.get('discontinuity') ||
         item.get('map') !== previous.get('map') ||
-        item.get('mapByteRange') !== previous.get('mapByteRange');
+        item.get('mapByteRange') !== previous.get('mapByteRange') ||
+        JSON.stringify(item.get('mapKeys')) !== JSON.stringify(previous.get('mapKeys'));
       var includeKeys = previous
         ? keysString(item) !== keysString(previous)
         : item.get('keys') != null;
+      var previousKeys = previous && previous.get('keys');
       previous = item;
-      return item.toString(Boolean(includeMap), includeKeys);
+      return item.toString(Boolean(includeMap), includeKeys, previousKeys);
     }).join('\n'));
 
     if (this.get('endlist') || this.get('playlistType') === 'VOD') {
