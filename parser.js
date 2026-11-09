@@ -8,9 +8,6 @@ var util = require('util'),
     MediaItem = require('./m3u/MediaItem'),
     AttributeList = require('./m3u/AttributeList');
 
-// used for splitting strings by commas not within double quotes
-var NON_QUOTED_COMMA = /,(?=(?:[^"]|"[^"]*")*$)/;
-
 var m3uParser = module.exports = function m3uParser() {
   Writable.call(this);
 
@@ -210,18 +207,4 @@ m3uParser.prototype['EXT-X-MEDIA'] = function(data) {
   this.emit('item', this.currentItem);
 };
 
-m3uParser.prototype.parseAttributes = function parseAttributes(data) {
-  if (typeof data != 'string') {
-    return [];
-  }
-  data = data.split(NON_QUOTED_COMMA);
-  return data.map(function(attribute) {
-    var keyValue = attribute.split(/=(.+)/).map(function(str) {
-      return str.trim();
-    });
-    return {
-      key   : keyValue[0],
-      value : keyValue[1]
-    };
-  });
-};
+m3uParser.prototype.parseAttributes = AttributeList.parse;

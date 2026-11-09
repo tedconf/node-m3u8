@@ -53,3 +53,30 @@ describe('encrypted initialization sections', function() {
     assert.deepStrictEqual(playlist.items.PlaylistItem[1].get('mapKeys'), [keyA, other]);
   });
 });
+
+
+describe('removed encryption key formats', function() {
+  var other = 'METHOD=SAMPLE-AES,URI="other.key",KEYFORMAT="com.example"';
+  [
+    ['between segments', ['#EXTINF:6,', 'one.m4s'], []],
+    ['with an unchanged map', ['#EXT-X-MAP:URI="init.mp4"', '#EXTINF:6,', 'one.m4s'], []],
+    ['between a map and its segment', ['#EXT-X-MAP:URI="init.mp4"'], []],
+    ['before a new map', ['#EXT-X-MAP:URI="init.mp4"', '#EXTINF:6,', 'one.m4s'], ['#EXT-X-MAP:URI="next.mp4"']]
+  ].forEach(function(test) {
+    [keyB, other].forEach(function(remaining) {
+      it('round trips dropped formats ' + test[0] + ' retaining ' + remaining, async function() {
+        var source = ['#EXTM3U', '#EXT-X-KEY:' + keyA, '#EXT-X-KEY:' + other]
+          .concat(test[1], ['#EXT-X-KEY:METHOD=NONE', '#EXT-X-KEY:' + remaining],
+            test[2], ['#EXTINF:6,', 'two.m4s', '#EXT-X-ENDLIST']).join('\n');
+        var original = await parse(source);
+        var restored = await parse(original.toString());
+        function keys(playlist) {
+          return playlist.items.PlaylistItem.map(function(item) {
+            return [item.get('mapKeys'), item.get('keys')];
+          });
+        }
+        assert.deepStrictEqual(keys(restored), keys(original));
+      });
+    });
+  });
+});
