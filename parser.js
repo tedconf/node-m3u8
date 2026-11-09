@@ -8,9 +8,6 @@ var util = require('util'),
     MediaItem = require('./m3u/MediaItem'),
     AttributeList = require('./m3u/AttributeList');
 
-// used for splitting strings by commas not within double quotes
-var NON_QUOTED_COMMA = /,(?=(?:[^"]|"[^"]*")*$)/;
-
 var m3uParser = module.exports = function m3uParser() {
   Writable.call(this);
 
@@ -116,11 +113,11 @@ m3uParser.prototype.addPlaylistItem = function addPlaylistItem() {
   if (this.map) {
     item.set('map', this.map.uri);
     item.set('mapByteRange', this.map.byteRange);
+    item.set('mapKeys', this.map.keys);
   }
   if (this.keys) {
     item.set('keys', this.keys);
   }
-  this.keysOpen = false;
   return item;
 };
 
@@ -171,21 +168,25 @@ m3uParser.prototype['EXT-X-MAP'] = function parseMap(data) {
   }
   this.map = {
     uri       : attributes.get('uri'),
-    byteRange : attributes.get('byterange') || null
+    byteRange : attributes.get('byterange') || null,
+    keys      : this.keys ? this.keys.slice() : []
   };
   var item = this.pendingPlaylistItem();
   if (item) {
     item.set('map', this.map.uri);
     item.set('mapByteRange', this.map.byteRange);
+    item.set('mapKeys', this.map.keys);
   }
 };
 
 m3uParser.prototype['EXT-X-KEY'] = function parseKey(data) {
-  if (!this.keysOpen) {
-    this.keys = [];
-    this.keysOpen = true;
-  }
-  this.keys.push(data);
+  var attributes = new AttributeList(this.parseAttributes(data));
+  var format = attributes.get('keyformat') || 'identity';
+  this.keys = attributes.get('method') === 'NONE' ? [] : (this.keys || []).filter(function(key) {
+    var existing = new AttributeList(this.parseAttributes(key));
+    return (existing.get('keyformat') || 'identity') !== format;
+  }, this);
+  if (attributes.get('method') !== 'NONE') this.keys.push(data);
   var item = this.pendingPlaylistItem();
   if (item) {
     item.set('keys', this.keys);
@@ -206,18 +207,4 @@ m3uParser.prototype['EXT-X-MEDIA'] = function(data) {
   this.emit('item', this.currentItem);
 };
 
-m3uParser.prototype.parseAttributes = function parseAttributes(data) {
-  if (typeof data != 'string') {
-    return [];
-  }
-  data = data.split(NON_QUOTED_COMMA);
-  return data.map(function(attribute) {
-    var keyValue = attribute.split(/=(.+)/).map(function(str) {
-      return str.trim();
-    });
-    return {
-      key   : keyValue[0],
-      value : keyValue[1]
-    };
-  });
-};
+m3uParser.prototype.parseAttributes = AttributeList.parse;

@@ -21,6 +21,10 @@ var dataTypes = AttributeList.dataTypes = {
   'group-id'           : 'quoted-string',
   'hdcp-level'         : 'enumerated-string',
   'instream-id'        : 'quoted-string',
+  'method'            : 'enumerated-string',
+  'iv'                : 'enumerated-string',
+  'keyformat'         : 'quoted-string',
+  'keyformatversions' : 'quoted-string',
   'language'           : 'quoted-string',
   'name'               : 'quoted-string',
   'pathway-id'         : 'quoted-string',
@@ -144,4 +148,22 @@ var parse = {
     console.error('Handling value:', value, ' for unknown key:', key);
     return value;
   }
+};
+
+var NON_QUOTED_COMMA = /,(?=(?:[^"]|"[^"]*")*$)/;
+
+AttributeList.parse = function parseAttributes(data) {
+  if (typeof data != 'string') {
+    return [];
+  }
+  data = data.split(NON_QUOTED_COMMA);
+  return data.map(function(attribute) {
+    var keyValue = attribute.split(/=(.+)/).map(function(str) {
+      return str.trim();
+    });
+    return {
+      key   : keyValue[0],
+      value : keyValue[1]
+    };
+  });
 };
