@@ -115,9 +115,11 @@ def changes(base):
 
 
 def main():
-    args = argparse.ArgumentParser(description="Reject prose comments added since the merge base.")
+    args = argparse.ArgumentParser(description="Report prose comments added since the merge base.")
     args.add_argument("base", nargs="?", default="origin/main")
-    base = git("merge-base", args.parse_args().base, "HEAD").decode().strip()
+    args.add_argument("--advisory", action="store_true", help="Report findings without failing the check")
+    options = args.parse_args()
+    base = git("merge-base", options.base, "HEAD").decode().strip()
     failed = False
     for old, new in changes(base):
         if new.is_symlink() or not new.is_file():
@@ -139,7 +141,7 @@ def main():
             else:
                 print(f"{new}:{line}: new code comment")
                 failed = True
-    return int(failed)
+    return int(failed and not options.advisory)
 
 
 if __name__ == "__main__":

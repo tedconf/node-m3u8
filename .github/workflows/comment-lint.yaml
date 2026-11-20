@@ -1,4 +1,4 @@
-name: Comment lint
+name: Comment review
 
 on: pull_request
 
@@ -21,4 +21,4 @@ jobs:
           python3 -m venv "$RUNNER_TEMP/comment-lint"
           "$RUNNER_TEMP/comment-lint/bin/pip" install -r .github/comment-lint/requirements.txt
           "$RUNNER_TEMP/comment-lint/bin/python" .github/comment-lint/test-lint-comments.py
-          "$RUNNER_TEMP/comment-lint/bin/python" .github/comment-lint/lint-comments.py "$COMMENT_BASE"
+          "$RUNNER_TEMP/comment-lint/bin/python" .github/comment-lint/lint-comments.py "$COMMENT_BASE" --advisory
