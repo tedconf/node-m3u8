@@ -1,0 +1,24 @@
+name: Comment review
+
+on: pull_request
+
+permissions:
+  contents: read
+
+jobs:
+  comments:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check new comments against the PR base
+        env:
+          COMMENT_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          python3 -m venv "$RUNNER_TEMP/comment-lint"
+          "$RUNNER_TEMP/comment-lint/bin/pip" install -r .github/comment-lint/requirements.txt
+          "$RUNNER_TEMP/comment-lint/bin/python" .github/comment-lint/test-lint-comments.py
+          "$RUNNER_TEMP/comment-lint/bin/python" .github/comment-lint/lint-comments.py "$COMMENT_BASE" --advisory
